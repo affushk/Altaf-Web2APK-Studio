@@ -1,4 +1,4 @@
-name: Build Proof APK
+name: Build Bunny Teacher APK
 on:
   workflow_dispatch:
   push:
@@ -15,9 +15,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build debug APK
+      - name: Build APK
         run: gradle :app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: Altaf-Web2APK-Studio-Proof-V1
+          name: Bunny-Teacher-Web2APK-V2
           path: app/build/outputs/apk/debug/app-debug.apk
