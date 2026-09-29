@@ -1,13 +1,47 @@
-name: Build Bunny Teacher APK
+name: Generate Web2APK
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
+    inputs:
+      website_url:
+        description: 'Website URL (https://...)'
+        required: true
+        default: 'https://www.wikipedia.org/'
+      app_name:
+        description: 'App name'
+        required: true
+        default: 'My Web App'
+      package_name:
+        description: 'Package name (lowercase, e.g. com.altaf.myapp)'
+        required: true
+        default: 'com.altaf.mywebapp'
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate and configure
+        env:
+          WEB_URL: ${{ inputs.website_url }}
+          APP_NAME: ${{ inputs.app_name }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+        run: |
+          python3 - <<'PY'
+          import os,re,pathlib
+          url=os.environ['WEB_URL'].strip()
+          name=os.environ['APP_NAME'].strip()
+          pkg=os.environ['PACKAGE_NAME'].strip()
+          if not re.match(r'^https?://',url): raise SystemExit('URL must start with http:// or https://')
+          if not re.match(r'^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$',pkg): raise SystemExit('Invalid package name')
+          files={
+            'app/src/main/java/com/altaf/web2apk/MainActivity.java': {'__WEB2APK_URL__':url.replace('\\','\\\\').replace('"','\\"')},
+            'app/src/main/AndroidManifest.xml': {'__APP_NAME__':name.replace('&','&amp;').replace('"','&quot;').replace('<','&lt;').replace('>','&gt;')},
+            'app/build.gradle.kts': {'__PACKAGE_NAME__':pkg}
+          }
+          for f,repls in files.items():
+            p=pathlib.Path(f); s=p.read_text()
+            for a,b in repls.items(): s=s.replace(a,b)
+            p.write_text(s)
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -19,5 +53,5 @@ jobs:
         run: gradle :app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: Bunny-Teacher-Web2APK-V2
+          name: Generated-Web2APK
           path: app/build/outputs/apk/debug/app-debug.apk
