@@ -2,61 +2,36 @@ name: Generate Web2APK
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'web2apk-config.json'
-      - '.github/workflows/build-apk.yml'
-      - 'app/**'
+    paths: ['web2apk-config.json','.github/workflows/build-apk.yml','app/**']
   workflow_dispatch:
-    inputs:
-      website_url:
-        description: 'Website URL'
-        required: false
-      app_name:
-        description: 'App name'
-        required: false
-      package_name:
-        description: 'Package name'
-        required: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Configure target
-        env:
-          INPUT_URL: ${{ inputs.website_url }}
-          INPUT_NAME: ${{ inputs.app_name }}
-          INPUT_PACKAGE: ${{ inputs.package_name }}
         run: |
           python3 - <<'PY'
-          import os,re,json,pathlib
-          cfg=json.loads(pathlib.Path("web2apk-config.json").read_text())
-          url=(os.getenv("INPUT_URL") or cfg["website_url"]).strip()
-          name=(os.getenv("INPUT_NAME") or cfg["app_name"]).strip()
-          pkg=(os.getenv("INPUT_PACKAGE") or cfg["package_name"]).strip()
+          import json,re,pathlib
+          c=json.loads(pathlib.Path("web2apk-config.json").read_text()); url=c["website_url"].strip(); name=c["app_name"].strip(); pkg=c["package_name"].strip()
           if not re.match(r"^https?://",url): raise SystemExit("URL must start with http:// or https://")
           if not re.match(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$",pkg): raise SystemExit("Invalid package name")
+          color=lambda x: x if re.match(r"^#[0-9A-Fa-f]{6}$",x) else (_ for _ in ()).throw(SystemExit("Invalid HEX color"))
+          java_name=name.replace("\\","\\\\").replace('"','\\"')
           reps={
-            "app/src/main/java/com/altaf/web2apk/MainActivity.java":{"__WEB2APK_URL__":url.replace("\\","\\\\").replace('"','\\"')},
-            "app/src/main/AndroidManifest.xml":{"__APP_NAME__":name.replace("&","&amp;").replace('"',"&quot;").replace("<","&lt;").replace(">","&gt;")},
-            "app/build.gradle.kts":{"__PACKAGE_NAME__":pkg}}
+           "app/src/main/java/com/altaf/web2apk/MainActivity.java":{"__WEB2APK_URL__":url.replace("\\","\\\\").replace('"','\\"'),"__APP_NAME_JAVA__":java_name,"__SPLASH_BG__":color(c.get("splash_background","#101014")),"__ACCENT__":color(c.get("accent_color","#6750A4")),"__SPLASH_MS__":str(int(c.get("splash_duration_ms",900))),"__JS_ENABLED__":str(bool(c.get("javascript",True))).lower(),"__ZOOM_ENABLED__":str(bool(c.get("zoom",False))).lower(),"__EXTERNAL_LINKS__":str(bool(c.get("external_links_in_browser",False))).lower()},
+           "app/src/main/AndroidManifest.xml":{"__APP_NAME__":name.replace("&","&amp;").replace('"',"&quot;").replace("<","&lt;").replace(">","&gt;"),"__ORIENTATION__":c.get("orientation","unspecified")},
+           "app/build.gradle.kts":{"__PACKAGE_NAME__":pkg}}
           for fn,rr in reps.items():
-            p=pathlib.Path(fn); s=p.read_text()
-            for a,b in rr.items(): s=s.replace(a,b)
-            p.write_text(s)
-          print("Configured:",name,url,pkg)
+           p=pathlib.Path(fn);s=p.read_text()
+           for a,b in rr.items():s=s.replace(a,b)
+           p.write_text(s)
           PY
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+        with: {distribution: temurin, java-version: '17'}
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+        with: {gradle-version: '8.9'}
       - name: Build APK
         run: gradle :app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
-        with:
-          name: Generated-Web2APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+        with: {name: Generated-Web2APK, path: app/build/outputs/apk/debug/app-debug.apk}
