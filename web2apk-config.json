@@ -1,5 +1,12 @@
 {
   "website_url": "https://www.wikipedia.org/",
   "app_name": "Altaf Web2APK Test",
-  "package_name": "com.altaf.web2apktest"
+  "package_name": "com.altaf.web2apktest",
+  "splash_background": "#101014",
+  "accent_color": "#6750A4",
+  "splash_duration_ms": 900,
+  "orientation": "unspecified",
+  "javascript": true,
+  "zoom": false,
+  "external_links_in_browser": false
 }
