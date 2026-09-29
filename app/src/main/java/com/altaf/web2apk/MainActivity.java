@@ -1,7 +1,7 @@
 package com.altaf.web2apk;
 import android.app.*; import android.os.*; import android.graphics.*; import android.content.*; import android.net.*; import android.view.*; import android.webkit.*; import android.widget.*; import java.util.*;
 public class MainActivity extends Activity {
- static final String HOME="https://019fb1f6-1a7f-7baf-b3d7-1fa3164d5027.arena.site/";
+ static final String HOME="https://www.wikipedia.org/";
  WebView web; ProgressBar progress;
  @Override public void onCreate(Bundle b){super.onCreate(b);
   FrameLayout frame=new FrameLayout(this); web=new WebView(this); progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
