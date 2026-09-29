@@ -1,66 +1,61 @@
 name: Generate Web2APK
 on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'web2apk-config.json'
+      - '.github/workflows/build-apk.yml'
+      - 'app/**'
   workflow_dispatch:
     inputs:
       website_url:
-        description: 'Website URL (https://...)'
-        required: true
-        default: 'https://www.wikipedia.org/'
+        description: 'Website URL'
+        required: false
       app_name:
         description: 'App name'
-        required: true
-        default: 'My Web App'
+        required: false
       package_name:
-        description: 'Package name, e.g. com.altaf.myapp'
-        required: true
-        default: 'com.altaf.mywebapp'
+        description: 'Package name'
+        required: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate and configure
+      - name: Configure target
         env:
-          WEB_URL: ${{ inputs.website_url }}
-          APP_NAME: ${{ inputs.app_name }}
-          PACKAGE_NAME: ${{ inputs.package_name }}
+          INPUT_URL: ${{ inputs.website_url }}
+          INPUT_NAME: ${{ inputs.app_name }}
+          INPUT_PACKAGE: ${{ inputs.package_name }}
         run: |
           python3 - <<'PY'
-          import os,re,pathlib
-          url=os.environ["WEB_URL"].strip()
-          name=os.environ["APP_NAME"].strip()
-          pkg=os.environ["PACKAGE_NAME"].strip()
-          if not re.match(r"^https?://", url):
-              raise SystemExit("URL must start with http:// or https://")
-          if not re.match(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$", pkg):
-              raise SystemExit("Invalid package name")
-          replacements={
+          import os,re,json,pathlib
+          cfg=json.loads(pathlib.Path("web2apk-config.json").read_text())
+          url=(os.getenv("INPUT_URL") or cfg["website_url"]).strip()
+          name=(os.getenv("INPUT_NAME") or cfg["app_name"]).strip()
+          pkg=(os.getenv("INPUT_PACKAGE") or cfg["package_name"]).strip()
+          if not re.match(r"^https?://",url): raise SystemExit("URL must start with http:// or https://")
+          if not re.match(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$",pkg): raise SystemExit("Invalid package name")
+          reps={
             "app/src/main/java/com/altaf/web2apk/MainActivity.java":{"__WEB2APK_URL__":url.replace("\\","\\\\").replace('"','\\"')},
             "app/src/main/AndroidManifest.xml":{"__APP_NAME__":name.replace("&","&amp;").replace('"',"&quot;").replace("<","&lt;").replace(">","&gt;")},
-            "app/build.gradle.kts":{"__PACKAGE_NAME__":pkg}
-          }
-          for filename,repls in replacements.items():
-              path=pathlib.Path(filename)
-              data=path.read_text()
-              for old,new in repls.items():
-                  data=data.replace(old,new)
-              path.write_text(data)
+            "app/build.gradle.kts":{"__PACKAGE_NAME__":pkg}}
+          for fn,rr in reps.items():
+            p=pathlib.Path(fn); s=p.read_text()
+            for a,b in rr.items(): s=s.replace(a,b)
+            p.write_text(s)
+          print("Configured:",name,url,pkg)
           PY
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
       - name: Build APK
         run: gradle :app:assembleDebug --stacktrace
-
       - uses: actions/upload-artifact@v4
         with:
           name: Generated-Web2APK
