@@ -184,20 +184,38 @@ export default function App() {
         snapshot();
       }
     } else {
-      const obj = new fabric.Textbox(value, {
-        left: size.w * .14, top: size.h * .14,
-        width: size.w * .72,
-        fontSize: Math.max(42, size.w * .055),
-        fill,
+      // Use Fabric.Text instead of Textbox for reliable Android WebView rendering.
+      // Text editing itself is handled by our mobile text dialog.
+      const obj = new fabric.Text(value, {
+        left: size.w / 2,
+        top: size.h / 2,
+        originX: 'center',
+        originY: 'center',
+        fontSize: Math.max(64, size.w * .07),
+        fill: '#111111',
         fontFamily: 'Arial',
-        fontWeight: 700,
-        editable: false
+        fontWeight: '700',
+        objectCaching: false
       });
       (obj as any).name = 'Text';
-      c.add(obj); c.setActiveObject(obj); c.renderAll();
+      c.discardActiveObject();
+      c.add(obj);
+      c.bringToFront(obj);
+      obj.setCoords();
+      c.setActiveObject(obj);
+      c.requestRenderAll();
+      setFill('#111111');
+      snapshot();
+
+      // Keep the newly added text in view even after the keyboard closes.
+      window.setTimeout(() => {
+        fitCanvas();
+        c.setActiveObject(obj);
+        c.requestRenderAll();
+      }, 180);
     }
     setTextOpen(false);
-    flash(textMode === 'edit' ? 'Text updated' : 'Text added');
+    flash(textMode === 'edit' ? 'Text updated' : 'Text added in center');
   };
 
   const addRect = () => {
