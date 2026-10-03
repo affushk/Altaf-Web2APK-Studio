@@ -26,6 +26,7 @@ export default function App() {
   const historyIndexRef = useRef(-1);
   const restoringRef = useRef(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const textInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [layers, setLayers] = useState<fabric.Object[]>([]);
   const [selected, setSelected] = useState<fabric.Object | null>(null);
@@ -37,6 +38,9 @@ export default function App() {
   const [customOpen, setCustomOpen] = useState(false);
   const [customW, setCustomW] = useState('1080');
   const [customH, setCustomH] = useState('1080');
+  const [textOpen, setTextOpen] = useState(false);
+  const [textValue, setTextValue] = useState('');
+  const [textMode, setTextMode] = useState<'add' | 'edit'>('add');
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -151,18 +155,49 @@ export default function App() {
     window.setTimeout(fitCanvas, 20);
   }, [size]);
 
-  const addText = () => {
+  const openAddText = () => {
+    setTextMode('add');
+    setTextValue('');
+    setTextOpen(true);
+    window.setTimeout(() => textInputRef.current?.focus(), 120);
+  };
+
+  const openEditText = () => {
+    const obj = fabricRef.current?.getActiveObject() as fabric.Textbox | undefined;
+    if (!obj || !['textbox', 'i-text', 'text'].includes(String(obj.type))) return;
+    setTextMode('edit');
+    setTextValue(String((obj as any).text || ''));
+    setTextOpen(true);
+    window.setTimeout(() => textInputRef.current?.focus(), 120);
+  };
+
+  const applyText = () => {
     const c = fabricRef.current;
     if (!c) return;
-    const obj = new fabric.IText('Double tap to edit', {
-      left: size.w * .18, top: size.h * .16,
-      fontSize: Math.max(42, size.w * .055),
-      fill,
-      fontFamily: 'Arial',
-      fontWeight: 700
-    });
-    (obj as any).name = 'Text';
-    c.add(obj); c.setActiveObject(obj); c.renderAll();
+    const value = textValue.trim() || 'Text';
+    if (textMode === 'edit') {
+      const obj = c.getActiveObject() as fabric.Textbox | undefined;
+      if (obj && ['textbox', 'i-text', 'text'].includes(String(obj.type))) {
+        (obj as any).set({ text: value });
+        obj.setCoords();
+        c.requestRenderAll();
+        snapshot();
+      }
+    } else {
+      const obj = new fabric.Textbox(value, {
+        left: size.w * .14, top: size.h * .14,
+        width: size.w * .72,
+        fontSize: Math.max(42, size.w * .055),
+        fill,
+        fontFamily: 'Arial',
+        fontWeight: 700,
+        editable: false
+      });
+      (obj as any).name = 'Text';
+      c.add(obj); c.setActiveObject(obj); c.renderAll();
+    }
+    setTextOpen(false);
+    flash(textMode === 'edit' ? 'Text updated' : 'Text added');
   };
 
   const addRect = () => {
@@ -340,6 +375,9 @@ export default function App() {
         {selected && (
           <div className="quickbar">
             <label className="color-chip"><Palette /><input type="color" value={fill} onChange={e => changeFill(e.target.value)} /></label>
+            {['textbox','i-text','text'].includes(String(selected.type)) && (
+              <button onClick={openEditText}><Type /> Edit Text</button>
+            )}
             <button onClick={duplicateSelected}><Copy /> Duplicate</button>
             <button className="danger" onClick={removeSelected}><Trash2 /> Delete</button>
           </div>
@@ -355,7 +393,7 @@ export default function App() {
 
         {panel === 'add' && (
           <div className="tool-grid">
-            <button onClick={addText}><Type /><span>Text</span></button>
+            <button onClick={openAddText}><Type /><span>Text</span></button>
             <button onClick={addRect}><Square /><span>Shape</span></button>
             <button onClick={addCircle}><Circle /><span>Circle</span></button>
             <button onClick={() => fileRef.current?.click()}><ImagePlus /><span>Photo</span></button>
@@ -392,6 +430,24 @@ export default function App() {
           </div>
         )}
       </section>
+
+      {textOpen && (
+        <div className="modal-backdrop text-modal">
+          <div className="modal">
+            <div className="modal-title"><b>{textMode === 'edit' ? 'Edit text' : 'Add text'}</b><button onClick={() => setTextOpen(false)}><X /></button></div>
+            <label>Your text
+              <textarea
+                ref={textInputRef}
+                value={textValue}
+                onChange={e => setTextValue(e.target.value)}
+                placeholder="Type anything..."
+                rows={4}
+              />
+            </label>
+            <button className="primary" onClick={applyText}><Check /> {textMode === 'edit' ? 'Update text' : 'Add to design'}</button>
+          </div>
+        </div>
+      )}
 
       {customOpen && (
         <div className="modal-backdrop">
