@@ -1,0 +1,29 @@
+{
+  "name": "altaf-create-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.1",
+    "@capacitor/core": "6.2.1",
+    "@capacitor/filesystem": "6.0.2",
+    "@capacitor/share": "6.0.2",
+    "fabric": "5.3.0",
+    "lucide-react": "0.468.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.1",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.7.2",
+    "vite": "5.4.11"
+  }
+}
