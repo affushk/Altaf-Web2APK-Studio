@@ -3,6 +3,8 @@ package com.altaf.bunnyteacher;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.webkit.JavascriptInterface;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
@@ -13,9 +15,12 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
+import java.util.Locale;
+
 public class MainActivity extends Activity {
     private WebView web;
     private ProgressBar progress;
+    private TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +43,16 @@ public class MainActivity extends Activity {
         root.addView(progress, pp);
 
         setContentView(root);
+
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && tts != null) {
+                int result = tts.setLanguage(new Locale("hi", "IN"));
+                Log.i("BunnyTeacher", "TTS_INIT languageResult=" + result);
+            } else {
+                Log.w("BunnyTeacher", "TTS_INIT_FAILED status=" + status);
+            }
+        });
+        web.addJavascriptInterface(new TtsBridge(), "AndroidTTS");
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -108,6 +123,32 @@ public class MainActivity extends Activity {
         web.loadUrl("file:///android_asset/www/index.html");
     }
 
+    private class TtsBridge {
+        @JavascriptInterface
+        public void speak(String text, float rate) {
+            runOnUiThread(() -> {
+                if (tts == null) return;
+                try {
+                    tts.setSpeechRate(Math.max(0.65f, Math.min(1.15f, rate)));
+                    tts.setPitch(1.08f);
+                    tts.speak(text == null ? "" : text,
+                            TextToSpeech.QUEUE_FLUSH, null, "bunny-teacher");
+                } catch (Exception e) {
+                    Log.e("BunnyTeacher", "TTS_SPEAK_ERROR", e);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stop() {
+            runOnUiThread(() -> {
+                if (tts != null) {
+                    try { tts.stop(); } catch (Exception ignored) {}
+                }
+            });
+        }
+    }
+
     private void runSmokeTest(WebView view) {
         view.postDelayed(() -> view.evaluateJavascript(
                 "(function(){var a=[].slice.call(document.querySelectorAll('button'));var b=a.find(function(x){return (x.innerText||'').indexOf('ABC')>=0;});if(b){b.click();return 'clicked';}return 'missing';})()",
@@ -122,6 +163,21 @@ public class MainActivity extends Activity {
                         }
                 ), 1500)
         ), 600);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (web != null) {
+            web.removeJavascriptInterface("AndroidTTS");
+            web.destroy();
+        }
+        if (tts != null) {
+            try {
+                tts.stop();
+                tts.shutdown();
+            } catch (Exception ignored) {}
+        }
+        super.onDestroy();
     }
 
     @Override
