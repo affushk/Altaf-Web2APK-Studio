@@ -174,14 +174,20 @@ export default function App() {
   const setCanvasCssZoom = (pct:number) => {
     const c = fabricRef.current;
     if (!c) return;
-    const p = Math.max(10, Math.min(200, Math.round(pct)));
+    const p = Math.max(8, Math.min(200, Math.round(pct)));
+    const scale = p / 100;
     const logicalW = logicalSizeRef.current.w;
     const logicalH = logicalSizeRef.current.h;
-    c.setDimensions(
-      { width: Math.max(1, Math.round(logicalW * p / 100)), height: Math.max(1, Math.round(logicalH * p / 100)) },
-      { cssOnly: true }
-    );
+
+    // Real display-sized Fabric canvas + viewport zoom.
+    // This is much more reliable on Android WebView than CSS-only resizing.
+    c.setDimensions({
+      width: Math.max(1, Math.round(logicalW * scale)),
+      height: Math.max(1, Math.round(logicalH * scale))
+    });
+    c.setViewportTransform([scale,0,0,scale,0,0]);
     c.calcOffset();
+    c.requestRenderAll();
     setZoomPct(p);
   };
 
@@ -192,12 +198,17 @@ export default function App() {
     if (!holder) return;
     const logicalW = logicalSizeRef.current.w;
     const logicalH = logicalSizeRef.current.h;
-    const maxW = Math.max(220, holder.clientWidth - 28);
-    const maxH = Math.max(220, holder.clientHeight - 28);
-    const pct = Math.max(10, Math.min(100, Math.floor(Math.min(maxW / logicalW, maxH / logicalH, 1) * 100)));
+    const rect = holder.getBoundingClientRect();
+    const availableW = rect.width > 100 ? rect.width : window.innerWidth;
+    const fallbackH = Math.max(260, window.innerHeight - 430);
+    const availableH = rect.height > 160 ? rect.height : fallbackH;
+    const maxW = Math.max(160, availableW - 30);
+    const maxH = Math.max(160, availableH - 34);
+    const scale = Math.min(maxW / logicalW, maxH / logicalH, 1);
+    const pct = Math.max(8, Math.min(100, Math.floor(scale * 100)));
     fitModeRef.current = true;
     setCanvasCssZoom(pct);
-    holder.scrollTo({left:0,top:0});
+    holder.scrollTo({left:0,top:0,behavior:'auto'});
   };
 
   const zoomBy = (delta:number) => {
@@ -342,6 +353,7 @@ export default function App() {
 
     fabricRef.current = c;
     logicalSizeRef.current = {w:initialSize.w,h:initialSize.h};
+    c.setBackgroundColor(pending && pending !== 'blank' ? pending.bg : bg, () => c.requestRenderAll());
 
     const onSelect = () => {
       const obj = c.getActiveObject() || null;
@@ -363,7 +375,6 @@ export default function App() {
       setSize({w:width,h:height});
       logicalSizeRef.current = {w:width,h:height};
       setBg(background);
-      c.setDimensions({width,height});
       c.setBackgroundColor(background, () => {});
       restoringRef.current = true;
       c.loadFromJSON(data, () => {
@@ -391,6 +402,7 @@ export default function App() {
     } else {
       historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize']))];
       historyIndexRef.current = 0;
+      c.setBackgroundColor(bg || '#ffffff', () => c.requestRenderAll());
     }
 
     pendingProjectRef.current = null;
@@ -405,7 +417,7 @@ export default function App() {
     if (pendingTemplateRef.current) {
       const t = pendingTemplateRef.current;
       pendingTemplateRef.current = null;
-      window.setTimeout(() => applyTemplate(t), 120);
+      window.setTimeout(async () => { await applyTemplate(t); fitCanvas(); }, 140);
     }
 
     return () => {
@@ -420,8 +432,8 @@ export default function App() {
     const c = fabricRef.current;
     if (!c) return;
     logicalSizeRef.current = {w:size.w,h:size.h};
-    c.setDimensions({ width: size.w, height: size.h });
-    window.setTimeout(fitCanvas, 40);
+    fitModeRef.current = true;
+    window.setTimeout(fitCanvas, 50);
   }, [size]);
 
   const startProject = (p?: Preset, project?: StoredProject) => {
@@ -677,11 +689,24 @@ export default function App() {
     flash('Project deleted');
   };
 
+  const renderFullResolution = <T,>(fn:()=>T):T => {
+    const c = fabricRef.current!;
+    const logicalW = logicalSizeRef.current.w;
+    const logicalH = logicalSizeRef.current.h;
+    const currentPct = zoomPct;
+    c.setDimensions({width:logicalW,height:logicalH});
+    c.setViewportTransform([1,0,0,1,0,0]);
+    c.requestRenderAll();
+    const result = fn();
+    window.setTimeout(() => setCanvasCssZoom(currentPct), 0);
+    return result;
+  };
+
   const exportImage = async (format: 'png' | 'jpeg') => {
     const c = fabricRef.current;
     if (!c) return;
     c.discardActiveObject(); c.renderAll();
-    const dataUrl = c.toDataURL({ format, quality: .96, multiplier: 1 });
+    const dataUrl = renderFullResolution(() => c.toDataURL({ format, quality: .96, multiplier: 1 }));
     const ext = format === 'jpeg' ? 'jpg' : 'png';
     const fileName = 'Altaf-Create-Studio-' + Date.now() + '.' + ext;
 
@@ -699,7 +724,7 @@ export default function App() {
     const c = fabricRef.current;
     if (!c) return;
     c.discardActiveObject(); c.renderAll();
-    const png = c.toDataURL({format:'png',quality:1,multiplier:1});
+    const png = renderFullResolution(() => c.toDataURL({format:'png',quality:1,multiplier:1}));
     const orientation = size.w > size.h ? 'landscape' : 'portrait';
     const doc = new jsPDF({orientation, unit:'px', format:[size.w,size.h], hotfixes:['px_scaling']});
     doc.addImage(png,'PNG',0,0,size.w,size.h);
@@ -724,9 +749,8 @@ export default function App() {
     logicalSizeRef.current = {w,h};
     const c = fabricRef.current;
     if (c) {
-      c.setDimensions({width:w,height:h});
       fitModeRef.current = true;
-      window.setTimeout(fitCanvas,50);
+      window.setTimeout(fitCanvas,60);
       snapshot();
       setCustomOpen(false);
       flash('Canvas resized • ' + sizeLabel(w,h,canvasUnit,dpi));
