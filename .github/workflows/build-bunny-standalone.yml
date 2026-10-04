@@ -94,7 +94,7 @@ jobs:
           }
           ''', encoding="utf-8")
 
-          (root / "gradle.properties").write_text("android.useAndroidX=true\\n", encoding="utf-8")
+          (root / "gradle.properties").write_text("android.useAndroidX=true" + chr(10), encoding="utf-8")
 
           (root / "app/build.gradle.kts").write_text(r'''plugins {
               id("com.android.application")
