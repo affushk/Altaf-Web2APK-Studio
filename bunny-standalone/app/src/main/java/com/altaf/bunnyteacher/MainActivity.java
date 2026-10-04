@@ -75,6 +75,9 @@ public class MainActivity extends Activity {
                                 int len = Integer.parseInt(value.replace("\"", ""));
                                 if (len >= 20) {
                                     Log.i("BunnyTeacher", "BUNNY_READY textLen=" + len);
+                                    if (getIntent().getBooleanExtra("smoke_test", false)) {
+                                        runSmokeTest(view);
+                                    }
                                 } else {
                                     Log.w("BunnyTeacher", "BUNNY_NOT_READY textLen=" + len);
                                     view.reload();
@@ -103,6 +106,22 @@ public class MainActivity extends Activity {
         });
 
         web.loadUrl("file:///android_asset/www/index.html");
+    }
+
+    private void runSmokeTest(WebView view) {
+        view.postDelayed(() -> view.evaluateJavascript(
+                "(function(){var a=[].slice.call(document.querySelectorAll('button'));var b=a.find(function(x){return (x.innerText||'').indexOf('ABC')>=0;});if(b){b.click();return 'clicked';}return 'missing';})()",
+                value -> view.postDelayed(() -> view.evaluateJavascript(
+                        "(function(){return !!(document.body && document.body.innerText.indexOf('ABC सीखो!')>=0);})()",
+                        ok -> {
+                            if ("true".equals(ok)) {
+                                Log.i("BunnyTeacher", "ABC_NAV_OK");
+                            } else {
+                                Log.e("BunnyTeacher", "ABC_NAV_FAIL result=" + ok);
+                            }
+                        }
+                ), 1500)
+        ), 600);
     }
 
     @Override
