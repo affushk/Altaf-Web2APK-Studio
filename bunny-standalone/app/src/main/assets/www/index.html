@@ -3,8 +3,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bunny Teacher - Fun Learning for Kids!</title>
     <script>
-      // Android WebView compatibility: speech synthesis is not implemented by
-      // every WebView provider. Keep voice calls non-fatal so lessons still work.
+      // Android WebView compatibility.
+      // Use native Android TTS when available and keep browser-only APIs non-fatal.
       (function () {
         if (typeof window.SpeechSynthesisUtterance === "undefined") {
           window.SpeechSynthesisUtterance = function (text) {
@@ -19,27 +19,94 @@
             this.onerror = null;
           };
         }
-        if (!window.speechSynthesis) {
-          window.speechSynthesis = {
-            onvoiceschanged: null,
-            getVoices: function () { return []; },
-            cancel: function () {},
-            pause: function () {},
-            resume: function () {},
-            speak: function (utterance) {
+
+        var nativeTts = function () {
+          try { return window.AndroidTTS || null; } catch (e) { return null; }
+        };
+
+        var originalSpeech = window.speechSynthesis || {};
+        var speech = {
+          onvoiceschanged: null,
+          getVoices: function () {
+            try {
+              return typeof originalSpeech.getVoices === "function"
+                ? originalSpeech.getVoices.call(originalSpeech) || []
+                : [];
+            } catch (e) { return []; }
+          },
+          cancel: function () {
+            try {
+              var n = nativeTts();
+              if (n && typeof n.stop === "function") { n.stop(); return; }
+              if (typeof originalSpeech.cancel === "function") originalSpeech.cancel.call(originalSpeech);
+            } catch (e) {}
+          },
+          pause: function () {
+            try {
+              if (typeof originalSpeech.pause === "function") originalSpeech.pause.call(originalSpeech);
+            } catch (e) {}
+          },
+          resume: function () {
+            try {
+              if (typeof originalSpeech.resume === "function") originalSpeech.resume.call(originalSpeech);
+            } catch (e) {}
+          },
+          speak: function (utterance) {
+            try {
+              if (utterance && typeof utterance.onstart === "function") {
+                setTimeout(function () { try { utterance.onstart(); } catch (e) {} }, 0);
+              }
+
+              var n = nativeTts();
+              if (n && typeof n.speak === "function") {
+                n.speak(String((utterance && utterance.text) || ""), Number((utterance && utterance.rate) || 0.86));
+              } else if (typeof originalSpeech.speak === "function") {
+                originalSpeech.speak.call(originalSpeech, utterance);
+                return;
+              }
+
+              if (utterance && typeof utterance.onend === "function") {
+                var delay = Math.max(300, Math.min(7000, String(utterance.text || "").length * 75));
+                setTimeout(function () { try { utterance.onend(); } catch (e) {} }, delay);
+              }
+            } catch (e) {
               try {
-                if (utterance && typeof utterance.onstart === "function") {
-                  setTimeout(function () { utterance.onstart(); }, 0);
-                }
-                if (utterance && typeof utterance.onend === "function") {
-                  setTimeout(function () { utterance.onend(); }, 30);
-                }
-              } catch (e) {}
+                if (utterance && typeof utterance.onerror === "function") utterance.onerror(e);
+              } catch (_) {}
             }
-          };
-        }
+          }
+        };
+        window.speechSynthesis = speech;
+
         if (!window.AudioContext && window.webkitAudioContext) {
           window.AudioContext = window.webkitAudioContext;
+        }
+
+        if (!window.AudioContext) {
+          var noop = function () {};
+          var param = function () {
+            return {
+              value: 0,
+              setValueAtTime: noop,
+              linearRampToValueAtTime: noop,
+              exponentialRampToValueAtTime: noop
+            };
+          };
+          window.AudioContext = function () {
+            this.state = "running";
+            this.currentTime = 0;
+            this.destination = {};
+            this.resume = function () { return Promise.resolve(); };
+            this.createOscillator = function () {
+              return { type: "sine", frequency: param(), connect: noop, start: noop, stop: noop };
+            };
+            this.createGain = function () {
+              return { gain: param(), connect: noop };
+            };
+            this.createBiquadFilter = function () {
+              return { type: "lowpass", frequency: param(), connect: noop };
+            };
+          };
         }
       })();
     </script>
