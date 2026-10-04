@@ -1,0 +1,88 @@
+name: Test Bunny Standalone UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-bunny-standalone.yml'
+      - 'bunny-standalone/app/src/main/assets/www/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Test local standalone app
+        run: |
+          cd bunny-standalone/app/src/main/assets/www
+          python3 -m http.server 8000 > /tmp/bunny-http.log 2>&1 &
+          echo $! > /tmp/bunny-http.pid
+          cd ../../../../../../..
+
+          cat > /tmp/test-bunny.js <<'JS'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async()=>{
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage({viewport:{width:430,height:900}});
+
+            const logs=[];
+            page.on('console', msg => logs.push({type:msg.type(), text:msg.text()}));
+            page.on('pageerror', err => logs.push({type:'pageerror', text:String(err)}));
+            page.on('requestfailed', req => logs.push({type:'requestfailed', text:req.url()+' :: '+(req.failure()?.errorText||'')}));
+
+            const resp = await page.goto('http://127.0.0.1:8000/index.html', {
+              waitUntil:'domcontentloaded',
+              timeout:120000
+            });
+            await page.waitForTimeout(5000);
+
+            const state = await page.evaluate(() => ({
+              title: document.title,
+              text: document.body ? document.body.innerText : '',
+              htmlLength: document.documentElement.outerHTML.length,
+              bodyChildren: document.body ? document.body.children.length : -1,
+              root: document.querySelector('#root') ? document.querySelector('#root').innerHTML.length : -1,
+              images: [...document.images].map(i=>({src:i.src,complete:i.complete,w:i.naturalWidth,h:i.naturalHeight})),
+            }));
+
+            fs.writeFileSync('bunny-test-state.json', JSON.stringify(state,null,2));
+            fs.writeFileSync('bunny-test-console.json', JSON.stringify(logs,null,2));
+            await page.screenshot({path:'bunny-test.png',fullPage:true});
+
+            console.log('HTTP',resp?.status());
+            console.log('STATE',JSON.stringify(state,null,2));
+            console.log('LOGS',JSON.stringify(logs,null,2));
+
+            const ok = state.text.includes('Bunny Teacher') &&
+                       state.text.includes('ABC') &&
+                       state.text.includes('गिनती') &&
+                       state.bodyChildren > 0;
+
+            await browser.close();
+            if(!ok) process.exit(2);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+
+          node /tmp/test-bunny.js
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bunny-Standalone-Test
+          path: |
+            bunny-test.png
+            bunny-test-state.json
+            bunny-test-console.json
