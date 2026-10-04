@@ -4,16 +4,14 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-
-import androidx.webkit.WebViewAssetLoader;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private WebView web;
@@ -54,20 +52,33 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(false);
         s.setTextZoom(100);
         s.setDefaultTextEncodingName("UTF-8");
+        s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(false);
 
         web.setBackgroundColor(Color.WHITE);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
-        WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
-                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
-                .build();
-
         web.setWebViewClient(new WebViewClient() {
             @Override
-            public WebResourceResponse shouldInterceptRequest(
-                    WebView view, WebResourceRequest request) {
-                return loader.shouldInterceptRequest(request.getUrl());
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                // Verify the bundled app actually rendered. If the React bundle fails,
+                // keep the already-rendered HTML snapshot visible rather than a blank page.
+                view.postDelayed(() -> view.evaluateJavascript(
+                        "(function(){return document.body ? document.body.innerText.length : 0;})()",
+                        value -> {
+                            try {
+                                int len = Integer.parseInt(value.replace("\"", ""));
+                                if (len < 20) {
+                                    view.reload();
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                ), 1200);
             }
         });
 
@@ -77,9 +88,19 @@ public class MainActivity extends Activity {
                 progress.setProgress(newProgress);
                 progress.setVisibility(newProgress >= 100 ? View.GONE : View.VISIBLE);
             }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+                    Toast.makeText(MainActivity.this,
+                            "App error: " + consoleMessage.message(),
+                            Toast.LENGTH_LONG).show();
+                }
+                return true;
+            }
         });
 
-        web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
+        web.loadUrl("file:///android_asset/www/index.html");
     }
 
     @Override
