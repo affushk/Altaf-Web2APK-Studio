@@ -12,7 +12,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private WebView web;
@@ -97,11 +96,8 @@ public class MainActivity extends Activity {
 
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
-                    Toast.makeText(MainActivity.this,
-                            "App error: " + consoleMessage.message(),
-                            Toast.LENGTH_LONG).show();
-                }
+                Log.d("BunnyTeacherWeb",
+                        consoleMessage.messageLevel() + ": " + consoleMessage.message());
                 return true;
             }
         });
