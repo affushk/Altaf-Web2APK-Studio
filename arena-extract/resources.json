@@ -1,0 +1,128 @@
+[
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/",
+    "status": 200,
+    "contentType": "text/html",
+    "frame": "about:blank"
+  },
+  {
+    "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap",
+    "status": 200,
+    "contentType": "text/css; charset=utf-8",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+    "status": 200,
+    "contentType": "text/javascript;charset=utf-8",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/static/array.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+    "status": 200,
+    "contentType": "font/woff2",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true",
+    "status": 200,
+    "contentType": "text/html",
+    "frame": ""
+  },
+  {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+    "status": 200,
+    "contentType": "text/javascript;charset=utf-8",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/array/phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM/config.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap",
+    "status": 200,
+    "contentType": "text/css; charset=utf-8",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/static/1.435.8/dead-clicks-autocapture.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/static/1.435.8/exception-autocapture.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/static/1.435.8/web-vitals-with-attribution.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/static/1.435.8/surveys.js",
+    "status": 200,
+    "contentType": "application/javascript",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/cdn-cgi/rum?",
+    "status": 204,
+    "contentType": "text/plain",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaBTMnFcQ.woff2",
+    "status": 200,
+    "contentType": "font/woff2",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/cdn-cgi/rum?",
+    "status": 204,
+    "contentType": "text/plain",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/images/bunny-celebrating.png",
+    "status": 200,
+    "contentType": "image/png",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/images/bunny-hero.png",
+    "status": 200,
+    "contentType": "image/png",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/api/surveys/?token=phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM&_=1791132040351",
+    "status": 200,
+    "contentType": "application/json",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/ph/flags/?v=2",
+    "status": 200,
+    "contentType": "application/json",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/"
+  },
+  {
+    "url": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/images/bunny-teaching.png",
+    "status": 200,
+    "contentType": "image/png",
+    "frame": "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/?embed=true"
+  }
+]
