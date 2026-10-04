@@ -1290,10 +1290,24 @@ export default function App() {
         <div className="modal-backdrop">
           <div className="modal">
             <div className="modal-title"><b>Resize canvas</b><button onClick={()=>setCustomOpen(false)}><X /></button></div>
-            <div className="size-fields">
-              <label>Width<input inputMode="numeric" value={customW} onChange={e=>setCustomW(e.target.value)} /></label>
-              <label>Height<input inputMode="numeric" value={customH} onChange={e=>setCustomH(e.target.value)} /></label>
+            <div className="size-mode-row">
+              <label>Unit
+                <select value={canvasUnit} onChange={e => changeCanvasUnit(e.target.value as Unit)}>
+                  <option value="px">Pixels (px)</option>
+                  <option value="in">Inches (in)</option>
+                  <option value="cm">Centimeters (cm)</option>
+                  <option value="mm">Millimeters (mm)</option>
+                </select>
+              </label>
+              <label>DPI
+                <input inputMode="numeric" value={dpi} onChange={e => changeDpi(Number(e.target.value))} />
+              </label>
             </div>
+            <div className="size-fields">
+              <label>Width<input inputMode="decimal" value={customW} onChange={e=>setCustomW(e.target.value)} /></label>
+              <label>Height<input inputMode="decimal" value={customH} onChange={e=>setCustomH(e.target.value)} /></label>
+            </div>
+            <div className="pixel-preview">Output: {Math.round(toPixels(Number(customW)||0,canvasUnit,dpi))} × {Math.round(toPixels(Number(customH)||0,canvasUnit,dpi))} px</div>
             <div className="resize-presets">{presets.map(p=><button key={p.name} onClick={()=>{setCanvasUnit('px');setCustomW(String(p.w));setCustomH(String(p.h));}}>{p.name}</button>)}</div>
             <button className="primary" onClick={applyCustom}><Check /> Apply size</button>
           </div>
