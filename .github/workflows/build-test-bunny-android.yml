@@ -38,9 +38,9 @@ jobs:
             adb install -r bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
             adb shell am force-stop com.altaf.bunnyteacher
-            adb shell monkey -p com.altaf.bunnyteacher -c android.intent.category.LAUNCHER 1
+            adb shell am start -n com.altaf.bunnyteacher/.MainActivity --ez smoke_test true
 
-            bash -lc 'READY=0; for i in $(seq 1 150); do if adb logcat -d -s BunnyTeacher:I "*:S" | grep -q "BUNNY_READY"; then READY=1; break; fi; sleep 1; done; adb exec-out screencap -p > bunny-android-screenshot.png; adb shell uiautomator dump /sdcard/window.xml || true; adb pull /sdcard/window.xml bunny-window.xml || true; adb logcat -d | grep -Ei "chromium|bunnyteacher|AndroidRuntime|crash|Console|BUNNY_" > bunny-logcat.txt || true; if [ "$READY" -ne 1 ]; then echo "Bunny Teacher did not report ready state"; exit 2; fi'
+            bash -lc 'READY=0; NAV=0; for i in $(seq 1 150); do LOGS="$(adb logcat -d -s BunnyTeacher:I BunnyTeacher:E "*:S")"; echo "$LOGS" | grep -q "BUNNY_READY" && READY=1; echo "$LOGS" | grep -q "ABC_NAV_OK" && NAV=1 && break; echo "$LOGS" | grep -q "ABC_NAV_FAIL" && break; sleep 1; done; adb exec-out screencap -p > bunny-android-screenshot.png; adb shell uiautomator dump /sdcard/window.xml || true; adb pull /sdcard/window.xml bunny-window.xml || true; adb logcat -d | grep -Ei "chromium|bunnyteacher|AndroidRuntime|crash|Console|BUNNY_|ABC_NAV" > bunny-logcat.txt || true; if [ "$READY" -ne 1 ]; then echo "Bunny Teacher did not report ready state"; exit 2; fi; if [ "$NAV" -ne 1 ]; then echo "ABC navigation did not pass"; exit 3; fi'
 
       - name: Sanity check screenshot exists
         run: |
