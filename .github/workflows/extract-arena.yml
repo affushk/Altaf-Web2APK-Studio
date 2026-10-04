@@ -1,0 +1,141 @@
+name: Extract Arena Bunny Teacher
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: ['.github/workflows/extract-arena.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Extract rendered Arena app
+        run: |
+          cat > extract.js <<'JS'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          const path = require('path');
+
+          const START = 'https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/';
+          const out = path.resolve('arena-extract');
+          fs.rmSync(out,{recursive:true,force:true});
+          fs.mkdirSync(out,{recursive:true});
+          fs.mkdirSync(path.join(out,'assets'),{recursive:true});
+
+          function safeName(url, i){
+            try {
+              const u = new URL(url);
+              let b = path.basename(u.pathname) || 'index';
+              b = b.replace(/[^a-zA-Z0-9._-]/g,'_');
+              if(!path.extname(b)) b += '.bin';
+              return String(i).padStart(4,'0')+'_'+b;
+            } catch { return String(i).padStart(4,'0')+'_asset.bin'; }
+          }
+
+          (async()=>{
+            const browser = await chromium.launch({headless:true});
+            const context = await browser.newContext({
+              viewport:{width:430,height:900},
+              userAgent:'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36'
+            });
+            const page = await context.newPage();
+
+            const resources = [];
+            page.on('response', async res => {
+              const url=res.url();
+              const ct=(res.headers()['content-type']||'').toLowerCase();
+              resources.push({url,status:res.status(),contentType:ct,frame:res.frame()?.url()||''});
+              if(res.status()>=200 && res.status()<300 &&
+                 /(javascript|css|image|font|json|svg|audio|video|octet-stream)/i.test(ct)){
+                try{
+                  const body=await res.body();
+                  if(body.length < 20*1024*1024){
+                    const name=safeName(url,resources.length);
+                    fs.writeFileSync(path.join(out,'assets',name),body);
+                  }
+                }catch(e){}
+              }
+            });
+
+            console.log('Opening',START);
+            await page.goto(START,{waitUntil:'domcontentloaded',timeout:120000});
+            await page.waitForTimeout(12000);
+
+            // Gather all frames after client-side hydration.
+            const frames = page.frames().map(f=>({name:f.name(),url:f.url()}));
+            fs.writeFileSync(path.join(out,'frames.json'),JSON.stringify(frames,null,2));
+            console.log('FRAMES',JSON.stringify(frames,null,2));
+
+            // Dump top document and each same-origin/accessibile frame HTML.
+            fs.writeFileSync(path.join(out,'top.html'),await page.content());
+            let n=0;
+            for(const f of page.frames()){
+              try{
+                const html=await f.content();
+                fs.writeFileSync(path.join(out,'frame-'+(n++)+'.html'),html);
+              }catch(e){}
+            }
+
+            const data = await page.evaluate(() => ({
+              title: document.title,
+              text: document.body ? document.body.innerText : '',
+              links: [...document.querySelectorAll('a')].map(a=>({text:a.innerText,href:a.href})),
+              images: [...document.images].map(i=>({src:i.src,alt:i.alt,width:i.naturalWidth,height:i.naturalHeight})),
+              iframes: [...document.querySelectorAll('iframe')].map(f=>({src:f.src,title:f.title,name:f.name})),
+              scripts: [...document.scripts].map(s=>s.src).filter(Boolean),
+              styles: [...document.querySelectorAll('link[rel="stylesheet"]')].map(l=>l.href),
+              buttons: [...document.querySelectorAll('button')].map(b=>b.innerText),
+              html: document.documentElement.outerHTML
+            }));
+            fs.writeFileSync(path.join(out,'page-data.json'),JSON.stringify(data,null,2));
+            fs.writeFileSync(path.join(out,'resources.json'),JSON.stringify(resources,null,2));
+            fs.writeFileSync(path.join(out,'screenshot.png'),await page.screenshot({fullPage:true}));
+
+            // Also inspect frame text / structure.
+            const frameData=[];
+            for(const f of page.frames()){
+              try{
+                frameData.push({
+                  url:f.url(),
+                  title:await f.title(),
+                  text:await f.locator('body').innerText({timeout:3000}),
+                  html:(await f.content()).slice(0,2000000)
+                });
+              }catch(e){
+                frameData.push({url:f.url(),error:String(e)});
+              }
+            }
+            fs.writeFileSync(path.join(out,'frame-data.json'),JSON.stringify(frameData,null,2));
+            console.log('EXTRACT_COMPLETE');
+            await browser.close();
+          })().catch(e=>{ console.error(e); process.exit(1); });
+          JS
+          node extract.js
+
+      - name: Commit extraction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add arena-extract
+          git commit -m "Extract Bunny Teacher from Arena" || true
+          git push
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bunny-Teacher-Arena-Extract
+          path: arena-extract
