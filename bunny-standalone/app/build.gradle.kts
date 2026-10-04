@@ -10,11 +10,9 @@ android {
         applicationId = "com.altaf.bunnyteacher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 3
-        versionName = "2.0-standalone"
+        versionCode = 4
+        versionName = "2.1-standalone"
     }
 }
 
-dependencies {
-    implementation("androidx.webkit:webkit:1.12.1")
-}
+dependencies {}
