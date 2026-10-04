@@ -8,7 +8,8 @@ import {
   Circle, ImagePlus, Sparkles, Folder, Clock3, Star, Settings, Grid2X2,
   FileText, Smartphone, Monitor, X, Check, Maximize2, SlidersHorizontal,
   Crop, Lock, RotateCw, FlipHorizontal, FlipVertical, Triangle, Minus,
-  FileDown, Eraser, Paintbrush, FolderOpen, CheckCircle2, ZoomIn, ZoomOut, Move, Ruler
+  FileDown, Eraser, Paintbrush, FolderOpen, CheckCircle2, ZoomIn, ZoomOut, Move, Ruler,
+  Eye, EyeOff, Unlock, AlignLeft, AlignCenter, AlignRight, Bold, RotateCcw
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -81,7 +82,13 @@ function safeProjects(): StoredProject[] {
   }
 }
 
-function makeTextDataUrl(text: string, color: string, fontSize: number, weight = '700') {
+function makeTextDataUrl(
+  text: string,
+  color: string,
+  fontSize: number,
+  weight = '700',
+  align: 'left'|'center'|'right' = 'center'
+) {
   const scale = 2;
   const pad = Math.max(24, Math.round(fontSize * .35));
   const lines = text.split('\n');
@@ -98,8 +105,10 @@ function makeTextDataUrl(text: string, color: string, fontSize: number, weight =
   ctx.clearRect(0, 0, c.width, c.height);
   ctx.font = weight + ' ' + fontSize + 'px Arial, sans-serif';
   ctx.textBaseline = 'top';
+  ctx.textAlign = align;
   ctx.fillStyle = color;
-  lines.forEach((line, i) => ctx.fillText(line || ' ', pad, pad + i * lineH));
+  const x = align === 'left' ? pad : align === 'right' ? maxW + pad : (maxW + pad * 2) / 2;
+  lines.forEach((line, i) => ctx.fillText(line || ' ', x, pad + i * lineH));
   return c.toDataURL('image/png');
 }
 
@@ -141,6 +150,9 @@ export default function App() {
   const [brushSize, setBrushSize] = useState(14);
   const [drawColor, setDrawColor] = useState('#111111');
   const [drawType, setDrawType] = useState<'pen'|'marker'|'highlighter'>('pen');
+  const [textFontSize, setTextFontSize] = useState(72);
+  const [textWeight, setTextWeight] = useState<'400'|'700'>('700');
+  const [textAlign, setTextAlign] = useState<'left'|'center'|'right'>('center');
   const [canvasUnit, setCanvasUnit] = useState<Unit>('px');
   const [dpi, setDpi] = useState(300);
   const [zoomPct, setZoomPct] = useState(100);
@@ -231,7 +243,7 @@ export default function App() {
   const snapshot = () => {
     const c = fabricRef.current;
     if (!c || restoringRef.current) return;
-    const json = JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize']));
+    const json = JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize','textWeight','textAlign','originalWidth','originalHeight']));
     const current = historyRef.current[historyIndexRef.current];
     if (json === current) return;
     historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
@@ -248,9 +260,10 @@ export default function App() {
     fontSize = Math.max(64, size.w * .07),
     x = size.w / 2,
     y = size.h / 2,
-    weight = '700'
+    weight: '400'|'700' = '700',
+    align: 'left'|'center'|'right' = 'center'
   ) => new Promise<fabric.Image>((resolve) => {
-    const url = makeTextDataUrl(text, color, fontSize, weight);
+    const url = makeTextDataUrl(text, color, fontSize, weight, align);
     fabric.Image.fromURL(url, img => {
       const baseScale = .5;
       const naturalW = Math.max(1, (img.width || 1) * baseScale);
@@ -271,6 +284,8 @@ export default function App() {
       (img as any).textValue = text;
       (img as any).textColor = color;
       (img as any).textFontSize = fontSize;
+      (img as any).textWeight = weight;
+      (img as any).textAlign = align;
       c.add(img);
       c.bringToFront(img);
       img.setCoords();
@@ -327,7 +342,7 @@ export default function App() {
     restoringRef.current = false;
     c.discardActiveObject();
     c.renderAll();
-    historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize']))];
+    historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize','textWeight','textAlign','originalWidth','originalHeight']))];
     historyIndexRef.current = 0;
     refreshLayers();
     flash(name + ' applied');
@@ -380,7 +395,7 @@ export default function App() {
       c.loadFromJSON(data, () => {
         restoringRef.current = false;
         c.renderAll();
-        historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize']))];
+        historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize','textWeight','textAlign','originalWidth','originalHeight']))];
         historyIndexRef.current = 0;
         refreshLayers();
         requestAnimationFrame(fitCanvas);
@@ -400,7 +415,7 @@ export default function App() {
         } catch {}
       }
     } else {
-      historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize']))];
+      historyRef.current = [JSON.stringify(c.toJSON(['name','appType','textValue','textColor','textFontSize','textWeight','textAlign','originalWidth','originalHeight']))];
       historyIndexRef.current = 0;
       c.setBackgroundColor(bg || '#ffffff', () => c.requestRenderAll());
     }
@@ -476,9 +491,16 @@ export default function App() {
     setActiveTool('design');
   };
 
-  const openAddText = () => {
+  const openAddText = (
+    fontSize = Math.max(64, size.w * .07),
+    weight: '400'|'700' = '700',
+    align: 'left'|'center'|'right' = 'center'
+  ) => {
     setTextMode('add');
     setTextValue('');
+    setTextFontSize(Math.round(fontSize));
+    setTextWeight(weight);
+    setTextAlign(align);
     setTextOpen(true);
     window.setTimeout(() => textInputRef.current?.focus(), 120);
   };
@@ -488,6 +510,9 @@ export default function App() {
     if (!obj || obj.appType !== 'text') return;
     setTextMode('edit');
     setTextValue(String(obj.textValue || ''));
+    setTextFontSize(Number(obj.textFontSize || 72));
+    setTextWeight(obj.textWeight === '400' ? '400' : '700');
+    setTextAlign(obj.textAlign || 'center');
     setTextOpen(true);
     window.setTimeout(() => textInputRef.current?.focus(), 120);
   };
@@ -500,22 +525,25 @@ export default function App() {
     if (textMode === 'edit') {
       const obj = c.getActiveObject() as any;
       if (obj?.appType === 'text') {
-        const displayW = obj.getScaledWidth();
-        const displayH = obj.getScaledHeight();
         const color = obj.textColor || fill || '#111111';
-        const fontSize = obj.textFontSize || Math.max(64,size.w*.07);
-        const url = makeTextDataUrl(value, color, fontSize);
+        const fontSize = textFontSize || obj.textFontSize || Math.max(64,size.w*.07);
+        const sx = obj.scaleX || .5;
+        const sy = obj.scaleY || .5;
+        const url = makeTextDataUrl(value, color, fontSize, textWeight, textAlign);
         obj.setSrc(url, () => {
           obj.textValue = value;
-          obj.scaleX = displayW / Math.max(1, obj.width || 1);
-          obj.scaleY = displayH / Math.max(1, obj.height || 1);
+          obj.textFontSize = fontSize;
+          obj.textWeight = textWeight;
+          obj.textAlign = textAlign;
+          obj.scaleX = sx;
+          obj.scaleY = sy;
           obj.setCoords();
           c.requestRenderAll();
           snapshot();
         });
       }
     } else {
-      const img = await addRasterText(c, value, '#111111');
+      const img = await addRasterText(c, value, '#111111', textFontSize, size.w / 2, size.h / 2, textWeight, textAlign);
       c.setActiveObject(img);
       c.requestRenderAll();
       snapshot();
@@ -581,6 +609,8 @@ export default function App() {
         img.set({ left: size.w * .15, top: size.h * .18, scaleX: scale, scaleY: scale });
         (img as any).name = file.name || 'Image';
         (img as any).appType = 'photo';
+        (img as any).originalWidth = img.width || 0;
+        (img as any).originalHeight = img.height || 0;
         c.add(img); c.setActiveObject(img); c.renderAll();
         snapshot();
         setActiveTool('photos');
@@ -609,6 +639,31 @@ export default function App() {
     });
   };
 
+  const updateSelectedTextStyle = (updates: {fontSize?:number; weight?:'400'|'700'; align?:'left'|'center'|'right'}) => {
+    const c = fabricRef.current;
+    const obj = c?.getActiveObject() as any;
+    if (!c || !obj || obj.appType !== 'text') return flash('Select a text layer');
+    const fontSize = updates.fontSize ?? obj.textFontSize ?? 72;
+    const weight = updates.weight ?? obj.textWeight ?? '700';
+    const align = updates.align ?? obj.textAlign ?? 'center';
+    const sx = obj.scaleX || .5;
+    const sy = obj.scaleY || .5;
+    const url = makeTextDataUrl(obj.textValue || 'Text', obj.textColor || '#111111', fontSize, weight, align);
+    obj.setSrc(url, () => {
+      obj.textFontSize = fontSize;
+      obj.textWeight = weight;
+      obj.textAlign = align;
+      obj.scaleX = sx;
+      obj.scaleY = sy;
+      obj.setCoords();
+      c.requestRenderAll();
+      snapshot();
+    });
+    setTextFontSize(fontSize);
+    setTextWeight(weight);
+    setTextAlign(align);
+  };
+
   const changeFill = (value: string) => {
     setFill(value);
     const c = fabricRef.current;
@@ -617,7 +672,7 @@ export default function App() {
     if (obj.appType === 'text') {
       const displayW = obj.getScaledWidth();
       const displayH = obj.getScaledHeight();
-      const url = makeTextDataUrl(obj.textValue || 'Text', value, obj.textFontSize || 72);
+      const url = makeTextDataUrl(obj.textValue || 'Text', value, obj.textFontSize || 72, obj.textWeight || '700', obj.textAlign || 'center');
       obj.setSrc(url, () => {
         obj.textColor = value;
         obj.scaleX = displayW / Math.max(1,obj.width || 1);
@@ -671,7 +726,7 @@ export default function App() {
       width: size.w,
       height: size.h,
       bg,
-      canvas: c.toJSON(['name','appType','textValue','textColor','textFontSize']),
+      canvas: c.toJSON(['name','appType','textValue','textColor','textFontSize','textWeight','textAlign','originalWidth','originalHeight']),
       updatedAt: Date.now()
     };
     localStorage.setItem(PROJECT_KEY, JSON.stringify(data));
@@ -875,6 +930,60 @@ export default function App() {
     });
   };
 
+  const setPhotoOpacity = (value:number) => {
+    const img = getPhoto(); const c = fabricRef.current;
+    if (!img || !c) return flash('Select a photo first');
+    img.set('opacity', value); c.requestRenderAll(); snapshot();
+  };
+
+  const setPhotoRounded = (radius:number) => {
+    const img = getPhoto(); const c = fabricRef.current;
+    if (!img || !c) return flash('Select a photo first');
+    if (radius <= 0) {
+      img.clipPath = undefined;
+    } else {
+      img.clipPath = new fabric.Rect({
+        width: img.width || 1,
+        height: img.height || 1,
+        rx: radius,
+        ry: radius,
+        originX: 'center',
+        originY: 'center'
+      });
+    }
+    c.requestRenderAll(); snapshot();
+  };
+
+  const resetPhoto = () => {
+    const img = getPhoto() as any; const c = fabricRef.current;
+    if (!img || !c) return flash('Select a photo first');
+    img.filters = [];
+    img.applyFilters();
+    img.set({
+      opacity:1, angle:0, flipX:false, flipY:false,
+      cropX:0, cropY:0,
+      width:img.originalWidth || img.width,
+      height:img.originalHeight || img.height,
+      clipPath:undefined
+    });
+    img.setCoords(); c.requestRenderAll(); snapshot(); flash('Photo reset');
+  };
+
+  const toggleLayerVisibility = (obj:fabric.Object) => {
+    const c=fabricRef.current; if(!c)return;
+    obj.set('visible', obj.visible === false ? true : false);
+    if(obj.visible === false && c.getActiveObject()===obj){c.discardActiveObject();setSelected(null);}
+    c.requestRenderAll(); snapshot(); refreshLayers();
+  };
+
+  const toggleLayerLock = (obj:fabric.Object) => {
+    const c=fabricRef.current; if(!c)return;
+    const locked = obj.selectable === false;
+    obj.set({selectable:locked,evented:locked});
+    if(!locked && c.getActiveObject()===obj){c.discardActiveObject();setSelected(null);}
+    c.requestRenderAll(); snapshot(); refreshLayers();
+  };
+
   const setDrawMode = (type: 'pen'|'marker'|'highlighter') => {
     const c = fabricRef.current;
     if (!c) return;
@@ -958,15 +1067,33 @@ export default function App() {
     }
 
     if (activeTool === 'text') {
+      const textObj:any = selected && (selected as any).appType === 'text' ? selected : null;
       return (
         <div className="panel-content">
-          <div className="panel-heading"><div><b>Text</b><span>Mobile-safe text layer</span></div></div>
-          <div className="text-presets">
-            <button onClick={openAddText} className="add-text-main"><Plus /> Add a text box</button>
-            <button onClick={openAddText} className="text-style heading-demo">Add a heading</button>
-            <button onClick={openAddText} className="text-style subheading-demo">Add a subheading</button>
-            <button onClick={openAddText} className="text-style body-demo">Add body text</button>
-          </div>
+          <div className="panel-heading"><div><b>Text</b><span>{textObj ? 'Edit selected text' : 'Add typography'}</span></div></div>
+          {textObj ? (
+            <div className="text-editor-controls">
+              <button className="edit-copy-btn" onClick={openEditText}><Type /> Edit words</button>
+              <label className="control-row"><span>Size <b>{Math.round(textObj.textFontSize || 72)}</b></span>
+                <input type="range" min="24" max="220" value={Math.round(textObj.textFontSize || 72)}
+                  onChange={e=>updateSelectedTextStyle({fontSize:Number(e.target.value)})} />
+              </label>
+              <div className="text-button-row">
+                <button className={(textObj.textWeight||'700')==='700'?'active':''} onClick={()=>updateSelectedTextStyle({weight:(textObj.textWeight||'700')==='700'?'400':'700'})}><Bold /> Bold</button>
+                <button className={(textObj.textAlign||'center')==='left'?'active':''} onClick={()=>updateSelectedTextStyle({align:'left'})}><AlignLeft /></button>
+                <button className={(textObj.textAlign||'center')==='center'?'active':''} onClick={()=>updateSelectedTextStyle({align:'center'})}><AlignCenter /></button>
+                <button className={(textObj.textAlign||'center')==='right'?'active':''} onClick={()=>updateSelectedTextStyle({align:'right'})}><AlignRight /></button>
+                <label className="inline-color"><Palette /><input type="color" value={textObj.textColor || '#111111'} onChange={e=>changeFill(e.target.value)} /></label>
+              </div>
+            </div>
+          ) : (
+            <div className="text-presets">
+              <button onClick={()=>openAddText(92,'700','center')} className="add-text-main"><Plus /> Add a text box</button>
+              <button onClick={()=>openAddText(110,'700','center')} className="text-style heading-demo">Add a heading</button>
+              <button onClick={()=>openAddText(70,'700','left')} className="text-style subheading-demo">Add a subheading</button>
+              <button onClick={()=>openAddText(46,'400','left')} className="text-style body-demo">Add body text</button>
+            </div>
+          )}
         </div>
       );
     }
@@ -1002,11 +1129,12 @@ export default function App() {
     }
 
     if (activeTool === 'photos') {
+      const photo:any = selected && (selected as any).appType === 'photo' ? selected : null;
       return (
         <div className="panel-content">
-          <div className="panel-heading"><div><b>Photo tools</b><span>Select a photo, then edit</span></div></div>
+          <div className="panel-heading"><div><b>Photo tools</b><span>{photo ? 'Edit selected photo' : 'Select a photo first'}</span></div></div>
           <div className="photo-tools photo-tools-scroll">
-            <button onClick={cropSquare}><Crop /><span>Square crop</span></button>
+            <button onClick={cropSquare}><Crop /><span>Square</span></button>
             <button onClick={rotatePhoto}><RotateCw /><span>Rotate</span></button>
             <button onClick={flipPhotoX}><FlipHorizontal /><span>Flip H</span></button>
             <button onClick={flipPhotoY}><FlipVertical /><span>Flip V</span></button>
@@ -1015,9 +1143,17 @@ export default function App() {
             <button onClick={() => photoFilter('saturation')}><Palette /><span>Saturate</span></button>
             <button onClick={() => photoFilter('grayscale')}><ImageIcon /><span>B&W</span></button>
             <button onClick={() => photoFilter('blur')}><Sparkles /><span>Blur</span></button>
-            <button onClick={() => photoFilter('clear')}><Trash2 /><span>Clear FX</span></button>
             <button onClick={removeSimpleBackground}><ImageIcon /><span>BG Remove</span></button>
+            <button onClick={resetPhoto}><RotateCcw /><span>Reset</span></button>
           </div>
+          {photo && <div className="photo-sliders">
+            <label><span>Opacity <b>{Math.round((photo.opacity ?? 1)*100)}%</b></span>
+              <input type="range" min="10" max="100" value={Math.round((photo.opacity ?? 1)*100)} onChange={e=>setPhotoOpacity(Number(e.target.value)/100)} />
+            </label>
+            <label><span>Corner round</span>
+              <input type="range" min="0" max="180" defaultValue="0" onChange={e=>setPhotoRounded(Number(e.target.value))} />
+            </label>
+          </div>}
         </div>
       );
     }
@@ -1046,6 +1182,8 @@ export default function App() {
                 <div className="layer-thumb">{(obj as any).appType==='text'?'T':String(obj.type).slice(0,1).toUpperCase()}</div>
                 <div className="layer-name">{(obj as any).name || obj.type || 'Layer'}</div>
                 <div className="layer-actions">
+                  <button className={obj.visible===false?'warn':''} onClick={e => {e.stopPropagation(); toggleLayerVisibility(obj)}}>{obj.visible===false?<EyeOff />:<Eye />}</button>
+                  <button className={obj.selectable===false?'warn':''} onClick={e => {e.stopPropagation(); toggleLayerLock(obj)}}>{obj.selectable===false?<Lock />:<Unlock />}</button>
                   <button onClick={e => {e.stopPropagation(); moveLayer(obj,'up')}}><ChevronUp /></button>
                   <button onClick={e => {e.stopPropagation(); moveLayer(obj,'down')}}><ChevronDown /></button>
                 </div>
@@ -1273,10 +1411,7 @@ export default function App() {
             <label><Palette /><input type="color" value={fill} onChange={e => changeFill(e.target.value)} /></label>
             {(selected as any).appType==='text' && <button onClick={openEditText}><Type /><span>Edit</span></button>}
             <button onClick={duplicateSelected}><Copy /><span>Copy</span></button>
-            <button onClick={() => {
-              const obj=fabricRef.current?.getActiveObject(); if(!obj)return;
-              obj.set({selectable:false,evented:false}); fabricRef.current?.discardActiveObject(); fabricRef.current?.requestRenderAll(); setSelected(null); flash('Object locked');
-            }}><Lock /><span>Lock</span></button>
+            <button onClick={() => { const obj=fabricRef.current?.getActiveObject(); if(obj) toggleLayerLock(obj); }}><Lock /><span>Lock</span></button>
             <button className="danger" onClick={removeSelected}><Trash2 /><span>Delete</span></button>
           </div>
         )}
@@ -1305,6 +1440,15 @@ export default function App() {
             <label>Your text
               <textarea ref={textInputRef} value={textValue} onChange={e => setTextValue(e.target.value)} placeholder="Type anything..." rows={4} />
             </label>
+            <div className="text-modal-options">
+              <label>Size<input type="number" min="24" max="220" value={textFontSize} onChange={e=>setTextFontSize(Math.max(24,Math.min(220,Number(e.target.value)||72)))} /></label>
+              <button className={textWeight==='700'?'active':''} onClick={()=>setTextWeight(textWeight==='700'?'400':'700')}><Bold /> Bold</button>
+              <div className="align-picker">
+                <button className={textAlign==='left'?'active':''} onClick={()=>setTextAlign('left')}><AlignLeft /></button>
+                <button className={textAlign==='center'?'active':''} onClick={()=>setTextAlign('center')}><AlignCenter /></button>
+                <button className={textAlign==='right'?'active':''} onClick={()=>setTextAlign('right')}><AlignRight /></button>
+              </div>
+            </div>
             <button className="primary" onClick={applyText}><Check /> {textMode === 'edit' ? 'Update text' : 'Add to design'}</button>
           </div>
         </div>
