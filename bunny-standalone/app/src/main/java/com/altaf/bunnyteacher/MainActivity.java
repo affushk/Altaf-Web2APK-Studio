@@ -3,6 +3,7 @@ package com.altaf.bunnyteacher;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
@@ -73,10 +74,15 @@ public class MainActivity extends Activity {
                         value -> {
                             try {
                                 int len = Integer.parseInt(value.replace("\"", ""));
-                                if (len < 20) {
+                                if (len >= 20) {
+                                    Log.i("BunnyTeacher", "BUNNY_READY textLen=" + len);
+                                } else {
+                                    Log.w("BunnyTeacher", "BUNNY_NOT_READY textLen=" + len);
                                     view.reload();
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Exception e) {
+                                Log.e("BunnyTeacher", "READY_CHECK_ERROR", e);
+                            }
                         }
                 ), 1200);
             }
