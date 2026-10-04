@@ -8,7 +8,7 @@ import {
   Circle, ImagePlus, Sparkles, Folder, Clock3, Star, Settings, Grid2X2,
   FileText, Smartphone, Monitor, X, Check, Maximize2, SlidersHorizontal,
   Crop, Lock, RotateCw, FlipHorizontal, FlipVertical, Triangle, Minus,
-  FileDown, Eraser, Paintbrush, FolderOpen, CheckCircle2
+  FileDown, Eraser, Paintbrush, FolderOpen, CheckCircle2, ZoomIn, ZoomOut, Move, Ruler
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -17,6 +17,27 @@ import { Share } from '@capacitor/share';
 type Preset = { name: string; label: string; w: number; h: number; icon: 'square' | 'story' | 'portrait' | 'a4' };
 type ToolPanel = 'design' | 'elements' | 'text' | 'uploads' | 'draw' | 'photos' | 'background' | 'layers' | 'more';
 type View = 'home' | 'editor';
+type Unit = 'px' | 'in' | 'cm' | 'mm';
+
+function toPixels(value:number, unit:Unit, dpi:number) {
+  if (unit === 'px') return value;
+  if (unit === 'in') return value * dpi;
+  if (unit === 'cm') return (value / 2.54) * dpi;
+  return (value / 25.4) * dpi;
+}
+function fromPixels(px:number, unit:Unit, dpi:number) {
+  if (unit === 'px') return px;
+  if (unit === 'in') return px / dpi;
+  if (unit === 'cm') return (px / dpi) * 2.54;
+  return (px / dpi) * 25.4;
+}
+function dimValue(px:number, unit:Unit, dpi:number) {
+  const v = fromPixels(px, unit, dpi);
+  return unit === 'px' ? String(Math.round(v)) : String(Math.round(v * 100) / 100);
+}
+function sizeLabel(w:number,h:number,unit:Unit,dpi:number) {
+  return dimValue(w,unit,dpi) + ' × ' + dimValue(h,unit,dpi) + ' ' + unit;
+}
 type StoredProject = {
   id: string;
   name: string;
@@ -120,6 +141,10 @@ export default function App() {
   const [brushSize, setBrushSize] = useState(14);
   const [drawColor, setDrawColor] = useState('#111111');
   const [drawType, setDrawType] = useState<'pen'|'marker'|'highlighter'>('pen');
+  const [canvasUnit, setCanvasUnit] = useState<Unit>('px');
+  const [dpi, setDpi] = useState(300);
+  const [zoomPct, setZoomPct] = useState(100);
+  const [panMode, setPanMode] = useState(false);
 
   const canvasEl = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
@@ -130,6 +155,8 @@ export default function App() {
   const textInputRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingProjectRef = useRef<StoredProject | 'blank' | null>(null);
   const pendingTemplateRef = useRef<string | null>(null);
+  const logicalSizeRef = useRef({w:1080,h:1080});
+  const fitModeRef = useRef(true);
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -144,21 +171,50 @@ export default function App() {
     setLayers([...c.getObjects()].reverse());
   };
 
+  const setCanvasCssZoom = (pct:number) => {
+    const c = fabricRef.current;
+    if (!c) return;
+    const p = Math.max(10, Math.min(200, Math.round(pct)));
+    const logicalW = logicalSizeRef.current.w;
+    const logicalH = logicalSizeRef.current.h;
+    c.setDimensions(
+      { width: Math.max(1, Math.round(logicalW * p / 100)), height: Math.max(1, Math.round(logicalH * p / 100)) },
+      { cssOnly: true }
+    );
+    c.calcOffset();
+    setZoomPct(p);
+  };
+
   const fitCanvas = () => {
     const c = fabricRef.current;
     if (!c) return;
     const holder = document.querySelector('.canvas-holder') as HTMLElement | null;
     if (!holder) return;
-    const logicalW = Number(c.getWidth()) || size.w;
-    const logicalH = Number(c.getHeight()) || size.h;
-    const maxW = Math.max(240, holder.clientWidth - 28);
-    const maxH = Math.max(240, holder.clientHeight - 28);
-    const scale = Math.min(maxW / logicalW, maxH / logicalH, 1);
-    c.setDimensions(
-      { width: Math.round(logicalW * scale), height: Math.round(logicalH * scale) },
-      { cssOnly: true }
-    );
-    c.calcOffset();
+    const logicalW = logicalSizeRef.current.w;
+    const logicalH = logicalSizeRef.current.h;
+    const maxW = Math.max(220, holder.clientWidth - 28);
+    const maxH = Math.max(220, holder.clientHeight - 28);
+    const pct = Math.max(10, Math.min(100, Math.floor(Math.min(maxW / logicalW, maxH / logicalH, 1) * 100)));
+    fitModeRef.current = true;
+    setCanvasCssZoom(pct);
+    holder.scrollTo({left:0,top:0});
+  };
+
+  const zoomBy = (delta:number) => {
+    fitModeRef.current = false;
+    setCanvasCssZoom(zoomPct + delta);
+  };
+
+  const togglePan = () => {
+    const c = fabricRef.current;
+    if (!c) return;
+    const next = !panMode;
+    setPanMode(next);
+    c.isDrawingMode = false;
+    c.selection = !next;
+    c.skipTargetFind = next;
+    if (next) c.discardActiveObject();
+    c.requestRenderAll();
   };
 
   const snapshot = () => {
@@ -185,11 +241,18 @@ export default function App() {
   ) => new Promise<fabric.Image>((resolve) => {
     const url = makeTextDataUrl(text, color, fontSize, weight);
     fabric.Image.fromURL(url, img => {
+      const baseScale = .5;
+      const naturalW = Math.max(1, (img.width || 1) * baseScale);
+      const naturalH = Math.max(1, (img.height || 1) * baseScale);
+      const limitScale = Math.min(1, (size.w * .84) / naturalW, (size.h * .34) / naturalH);
+      const finalScale = baseScale * limitScale;
       img.set({
         left: x,
         top: y,
         originX: 'center',
         originY: 'center',
+        scaleX: finalScale,
+        scaleY: finalScale,
         objectCaching: false
       });
       (img as any).name = 'Text';
@@ -278,6 +341,7 @@ export default function App() {
     });
 
     fabricRef.current = c;
+    logicalSizeRef.current = {w:initialSize.w,h:initialSize.h};
 
     const onSelect = () => {
       const obj = c.getActiveObject() || null;
@@ -297,6 +361,7 @@ export default function App() {
 
     const loadData = (data: any, width: number, height: number, background: string) => {
       setSize({w:width,h:height});
+      logicalSizeRef.current = {w:width,h:height};
       setBg(background);
       c.setDimensions({width,height});
       c.setBackgroundColor(background, () => {});
@@ -331,7 +396,11 @@ export default function App() {
     pendingProjectRef.current = null;
 
     requestAnimationFrame(fitCanvas);
-    window.addEventListener('resize', fitCanvas);
+    const onResize = () => { if (fitModeRef.current) fitCanvas(); };
+    window.addEventListener('resize', onResize);
+    const holderEl = document.querySelector('.canvas-holder') as HTMLElement | null;
+    const resizeObserver = holderEl ? new ResizeObserver(() => { if (fitModeRef.current) fitCanvas(); }) : null;
+    if (holderEl && resizeObserver) resizeObserver.observe(holderEl);
 
     if (pendingTemplateRef.current) {
       const t = pendingTemplateRef.current;
@@ -340,7 +409,8 @@ export default function App() {
     }
 
     return () => {
-      window.removeEventListener('resize', fitCanvas);
+      window.removeEventListener('resize', onResize);
+      resizeObserver?.disconnect();
       c.dispose();
       fabricRef.current = null;
     };
@@ -349,6 +419,7 @@ export default function App() {
   useEffect(() => {
     const c = fabricRef.current;
     if (!c) return;
+    logicalSizeRef.current = {w:size.w,h:size.h};
     c.setDimensions({ width: size.w, height: size.h });
     window.setTimeout(fitCanvas, 40);
   }, [size]);
@@ -366,6 +437,8 @@ export default function App() {
       setSize({ w: chosen.w, h: chosen.h });
       setCustomW(String(chosen.w));
       setCustomH(String(chosen.h));
+      setCanvasUnit('px');
+      setDpi(300);
       setBg('#ffffff');
       setProjectId('p_' + Date.now());
       setProjectName('Untitled design');
@@ -643,19 +716,38 @@ export default function App() {
   };
 
   const applyCustom = () => {
-    const w = Math.max(200, Math.min(5000, Number(customW) || 1080));
-    const h = Math.max(200, Math.min(5000, Number(customH) || 1080));
+    const rawW = Math.max(.01, Number(customW) || (canvasUnit === 'px' ? 1080 : 4));
+    const rawH = Math.max(.01, Number(customH) || (canvasUnit === 'px' ? 1080 : 4));
+    const w = Math.max(64, Math.min(12000, Math.round(toPixels(rawW, canvasUnit, dpi))));
+    const h = Math.max(64, Math.min(12000, Math.round(toPixels(rawH, canvasUnit, dpi))));
     setSize({ w, h });
+    logicalSizeRef.current = {w,h};
     const c = fabricRef.current;
     if (c) {
       c.setDimensions({width:w,height:h});
+      fitModeRef.current = true;
       window.setTimeout(fitCanvas,50);
       snapshot();
       setCustomOpen(false);
-      flash('Canvas resized');
+      flash('Canvas resized • ' + sizeLabel(w,h,canvasUnit,dpi));
     } else {
       pendingProjectRef.current = 'blank';
       setCustomOpen(false); setCreateOpen(false); setView('editor');
+    }
+  };
+
+  const changeCanvasUnit = (unit:Unit) => {
+    setCanvasUnit(unit);
+    setCustomW(dimValue(size.w,unit,dpi));
+    setCustomH(dimValue(size.h,unit,dpi));
+  };
+
+  const changeDpi = (next:number) => {
+    const d = Math.max(72, Math.min(1200, next || 300));
+    setDpi(d);
+    if (canvasUnit !== 'px') {
+      setCustomW(dimValue(size.w,canvasUnit,d));
+      setCustomH(dimValue(size.h,canvasUnit,d));
     }
   };
 
@@ -942,9 +1034,15 @@ export default function App() {
 
     return (
       <div className="panel-content">
-        <div className="panel-heading"><div><b>More tools</b><span>All buttons here work</span></div></div>
-        <div className="more-grid">
-          <button onClick={() => setCustomOpen(true)}><Maximize2 /><span>Resize</span></button>
+        <div className="panel-heading"><div><b>More tools</b><span>Everything stays reachable</span></div></div>
+        <div className="more-grid tool-launch-grid">
+          <button onClick={() => setActiveTool('draw')}><Pencil /><span>Draw</span></button>
+          <button onClick={() => setActiveTool('photos')}><ImageIcon /><span>Photos</span></button>
+          <button onClick={() => setActiveTool('background')}><Palette /><span>Background</span></button>
+          <button onClick={() => setActiveTool('layers')}><Layers3 /><span>Layers</span></button>
+        </div>
+        <div className="more-grid utility-grid">
+          <button onClick={() => { setCustomW(dimValue(size.w,canvasUnit,dpi)); setCustomH(dimValue(size.h,canvasUnit,dpi)); setCustomOpen(true); }}><Ruler /><span>Size</span></button>
           <button onClick={() => exportImage('png')}><Download /><span>PNG</span></button>
           <button onClick={() => exportImage('jpeg')}><ImageIcon /><span>JPG</span></button>
           <button onClick={exportPdf}><FileDown /><span>PDF</span></button>
@@ -1086,10 +1184,24 @@ export default function App() {
           <div className="modal-backdrop">
             <div className="modal">
               <div className="modal-title"><b>Custom canvas</b><button onClick={() => setCustomOpen(false)}><X /></button></div>
-              <div className="size-fields">
-                <label>Width<input inputMode="numeric" value={customW} onChange={e => setCustomW(e.target.value)} /></label>
-                <label>Height<input inputMode="numeric" value={customH} onChange={e => setCustomH(e.target.value)} /></label>
+              <div className="size-mode-row">
+                <label>Unit
+                  <select value={canvasUnit} onChange={e => changeCanvasUnit(e.target.value as Unit)}>
+                    <option value="px">Pixels (px)</option>
+                    <option value="in">Inches (in)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                    <option value="mm">Millimeters (mm)</option>
+                  </select>
+                </label>
+                <label>DPI
+                  <input inputMode="numeric" value={dpi} onChange={e => changeDpi(Number(e.target.value))} />
+                </label>
               </div>
+              <div className="size-fields">
+                <label>Width<input inputMode="decimal" value={customW} onChange={e => setCustomW(e.target.value)} /></label>
+                <label>Height<input inputMode="decimal" value={customH} onChange={e => setCustomH(e.target.value)} /></label>
+              </div>
+              <div className="pixel-preview">Output: {Math.round(toPixels(Number(customW)||0,canvasUnit,dpi))} × {Math.round(toPixels(Number(customH)||0,canvasUnit,dpi))} px</div>
               <button className="primary" onClick={applyCustom}><Check /> Create design</button>
             </div>
           </div>
@@ -1107,7 +1219,7 @@ export default function App() {
         <button className="project-title rename-project" onClick={() => {
           const n = window.prompt('Project name', projectName);
           if(n?.trim()) setProjectName(n.trim());
-        }}><b>{projectName}</b><span>{size.w} × {size.h}</span></button>
+        }}><b>{projectName}</b><span>{sizeLabel(size.w,size.h,canvasUnit,dpi)}</span></button>
         <div className="editor-actions">
           <button onClick={undo}><Undo2 /></button>
           <button onClick={redo}><Redo2 /></button>
@@ -1117,8 +1229,18 @@ export default function App() {
       </header>
 
       <main className="editor-workspace">
-        <section className="canvas-holder">
-          <div className="canvas-size-pill">{size.w} × {size.h}</div>
+        <section className={'canvas-holder ' + (panMode ? 'pan-mode' : '')}>
+          <div className="canvas-zoom-controls">
+            <button onClick={() => zoomBy(-10)} aria-label="Zoom out"><ZoomOut /></button>
+            <button className="zoom-value" onClick={fitCanvas}>{zoomPct}%</button>
+            <button onClick={() => zoomBy(10)} aria-label="Zoom in"><ZoomIn /></button>
+            <button className={panMode ? 'active' : ''} onClick={togglePan} aria-label="Pan canvas"><Move /></button>
+          </div>
+          <button className="canvas-size-pill" onClick={() => {
+            setCustomW(dimValue(size.w,canvasUnit,dpi));
+            setCustomH(dimValue(size.h,canvasUnit,dpi));
+            setCustomOpen(true);
+          }}>{sizeLabel(size.w,size.h,canvasUnit,dpi)}</button>
           <canvas ref={canvasEl} />
         </section>
 
@@ -1138,11 +1260,14 @@ export default function App() {
 
       <section className="editor-bottom">
         <div className="tool-strip">
-          {toolTabs.map(({id,label,icon:Icon}) => (
-            <button key={id} className={activeTool===id?'active':''} onClick={() => { if(drawing) stopDraw(); setActiveTool(id); }}>
-              <Icon /><span>{label}</span>
-            </button>
-          ))}
+          {toolTabs.filter(t => ['design','elements','text','uploads','more'].includes(t.id)).map(({id,label,icon:Icon}) => {
+            const extraActive = id === 'more' && ['draw','photos','background','layers','more'].includes(activeTool);
+            return (
+              <button key={id} className={(activeTool===id || extraActive)?'active':''} onClick={() => { if(drawing) stopDraw(); setActiveTool(id); }}>
+                <Icon /><span>{label}</span>
+              </button>
+            );
+          })}
         </div>
         <div className="tool-panel">{renderPanel()}</div>
       </section>
@@ -1169,7 +1294,7 @@ export default function App() {
               <label>Width<input inputMode="numeric" value={customW} onChange={e=>setCustomW(e.target.value)} /></label>
               <label>Height<input inputMode="numeric" value={customH} onChange={e=>setCustomH(e.target.value)} /></label>
             </div>
-            <div className="resize-presets">{presets.map(p=><button key={p.name} onClick={()=>{setCustomW(String(p.w));setCustomH(String(p.h));}}>{p.name}</button>)}</div>
+            <div className="resize-presets">{presets.map(p=><button key={p.name} onClick={()=>{setCanvasUnit('px');setCustomW(String(p.w));setCustomH(String(p.h));}}>{p.name}</button>)}</div>
             <button className="primary" onClick={applyCustom}><Check /> Apply size</button>
           </div>
         </div>
