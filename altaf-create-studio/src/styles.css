@@ -214,3 +214,38 @@ linear-gradient(45deg,#0e1016 25%,transparent 25%),linear-gradient(-45deg,#0e101
   .canvas-zoom-controls .zoom-value{min-width:43px}
   .canvas-size-pill{max-width:155px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+
+
+/* Prevent horizontal layout expansion on small Android screens */
+html,body,#root,.editor-shell,.editor-topbar,.editor-workspace,.editor-bottom,.tool-strip,.tool-panel,.panel-content{
+  width:100%;
+  max-width:100vw;
+  min-width:0;
+}
+.editor-shell{overflow:hidden}
+.editor-bottom{overflow:hidden}
+.tool-panel{overflow-x:hidden}
+.panel-content{overflow-x:hidden}
+.tool-strip{
+  width:100%;
+  max-width:100%;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+}
+.tool-strip button{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  padding-left:2px;
+  padding-right:2px;
+}
+.horizontal-cards,.photo-tools-scroll,.preset-row,.quick-start-scroll{
+  max-width:100%;
+}
+.canvas-holder .canvas-container{
+  max-width:none;
+  max-height:none;
+}
+.canvas-holder{
+  align-items:center;
+  justify-content:center;
+}
