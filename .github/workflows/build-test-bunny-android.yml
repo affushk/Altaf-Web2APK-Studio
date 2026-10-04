@@ -8,6 +8,10 @@ on:
       - '.github/workflows/build-test-bunny-android.yml'
       - 'bunny-standalone/**'
 
+concurrency:
+  group: bunny-android-verify
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
