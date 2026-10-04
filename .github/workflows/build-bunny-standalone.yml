@@ -1,0 +1,303 @@
+name: Build Bunny Teacher Standalone APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/build-bunny-standalone.yml'
+      - 'arena-extract/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate standalone Android project from extracted Arena app
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, shutil
+
+          src = Path("arena-extract/frame-1.html")
+          if not src.exists():
+              raise SystemExit("arena-extract/frame-1.html not found")
+
+          root = Path("bunny-standalone")
+          www = root / "app/src/main/assets/www"
+          images = www / "images"
+          java_dir = root / "app/src/main/java/com/altaf/bunnyteacher"
+          values = root / "app/src/main/res/values"
+          drawable = root / "app/src/main/res/drawable"
+
+          for p in [images, java_dir, values, drawable]:
+              p.mkdir(parents=True, exist_ok=True)
+
+          html = src.read_text(encoding="utf-8")
+
+          # Remove analytics/network-only script injected by hosting wrapper.
+          html = re.sub(
+              r'<script[^>]*static\.cloudflareinsights\.com[^>]*>.*?</script>',
+              '',
+              html,
+              flags=re.I | re.S
+          )
+
+          # The original generated app uses /images/... from the Arena origin.
+          # Make those asset paths local to the packaged app.
+          html = html.replace('src="/images/', 'src="images/')
+          html = html.replace("src='/images/", "src='images/")
+          html = html.replace('"/images/', '"images/')
+          html = html.replace("'/images/", "'images/")
+
+          # Remove any accidental Arena host references left in rendered HTML.
+          html = html.replace(
+              "https://019fbcc1-2d38-7c1e-89ec-cd36f72efa61.arena.site/",
+              ""
+          )
+
+          (www / "index.html").write_text(html, encoding="utf-8")
+
+          asset_dir = Path("arena-extract/assets")
+          wanted = {
+              "bunny-hero.png": "bunny-hero.png",
+              "bunny-teaching.png": "bunny-teaching.png",
+              "bunny-celebrating.png": "bunny-celebrating.png",
+          }
+
+          for suffix, out_name in wanted.items():
+              matches = list(asset_dir.glob(f"*_{suffix}"))
+              if not matches:
+                  raise SystemExit(f"Missing extracted asset: {suffix}")
+              shutil.copy2(matches[0], images / out_name)
+
+          shutil.copy2(images / "bunny-hero.png", drawable / "bunny_icon.png")
+
+          (root / "settings.gradle.kts").write_text(r'''pluginManagement {
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories { google(); mavenCentral() }
+          }
+          rootProject.name = "BunnyTeacherStandalone"
+          include(":app")
+          ''', encoding="utf-8")
+
+          (root / "build.gradle.kts").write_text(r'''plugins {
+              id("com.android.application") version "8.7.3" apply false
+          }
+          ''', encoding="utf-8")
+
+          (root / "app/build.gradle.kts").write_text(r'''plugins {
+              id("com.android.application")
+          }
+
+          android {
+              namespace = "com.altaf.bunnyteacher"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "com.altaf.bunnyteacher"
+                  minSdk = 23
+                  targetSdk = 35
+                  versionCode = 3
+                  versionName = "2.0-standalone"
+              }
+          }
+
+          dependencies {
+              implementation("androidx.webkit:webkit:1.12.1")
+          }
+          ''', encoding="utf-8")
+
+          (root / "app/src/main/AndroidManifest.xml").write_text(r'''<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="Bunny Teacher"
+                  android:icon="@drawable/bunny_icon"
+                  android:roundIcon="@drawable/bunny_icon"
+                  android:hardwareAccelerated="true"
+                  android:usesCleartextTraffic="false">
+                  <activity
+                      android:name=".MainActivity"
+                      android:screenOrientation="unspecified"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          ''', encoding="utf-8")
+
+          (values / "styles.xml").write_text(r'''<resources>
+              <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:statusBarColor">#FF8A65</item>
+                  <item name="android:navigationBarColor">#FF8A65</item>
+                  <item name="android:windowActionModeOverlay">true</item>
+                  <item name="android:windowNoTitle">true</item>
+              </style>
+          </resources>
+          ''', encoding="utf-8")
+
+          (java_dir / "MainActivity.java").write_text(r'''package com.altaf.bunnyteacher;
+
+          import android.app.Activity;
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebResourceResponse;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.widget.FrameLayout;
+          import android.widget.ProgressBar;
+
+          import androidx.webkit.WebViewAssetLoader;
+
+          public class MainActivity extends Activity {
+              private WebView web;
+              private ProgressBar progress;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  getWindow().setStatusBarColor(Color.rgb(255, 138, 101));
+                  getWindow().setNavigationBarColor(Color.rgb(255, 138, 101));
+
+                  FrameLayout root = new FrameLayout(this);
+                  web = new WebView(this);
+                  progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+
+                  root.addView(web, new FrameLayout.LayoutParams(
+                          FrameLayout.LayoutParams.MATCH_PARENT,
+                          FrameLayout.LayoutParams.MATCH_PARENT));
+
+                  FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
+                          FrameLayout.LayoutParams.MATCH_PARENT, 5);
+                  pp.gravity = android.view.Gravity.TOP;
+                  root.addView(progress, pp);
+
+                  setContentView(root);
+
+                  WebSettings s = web.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setDatabaseEnabled(true);
+                  s.setLoadsImagesAutomatically(true);
+                  s.setMediaPlaybackRequiresUserGesture(false);
+                  s.setBuiltInZoomControls(false);
+                  s.setDisplayZoomControls(false);
+                  s.setSupportZoom(false);
+                  s.setUseWideViewPort(true);
+                  s.setLoadWithOverviewMode(false);
+                  s.setTextZoom(100);
+                  s.setDefaultTextEncodingName("UTF-8");
+
+                  web.setBackgroundColor(Color.WHITE);
+                  web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                  web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+                  WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                          .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                          .build();
+
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public WebResourceResponse shouldInterceptRequest(
+                              WebView view, WebResourceRequest request) {
+                          return loader.shouldInterceptRequest(request.getUrl());
+                      }
+                  });
+
+                  web.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public void onProgressChanged(WebView view, int newProgress) {
+                          progress.setProgress(newProgress);
+                          progress.setVisibility(newProgress >= 100 ? View.GONE : View.VISIBLE);
+                      }
+                  });
+
+                  web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (web != null && web.canGoBack()) {
+                      web.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          ''', encoding="utf-8")
+
+          # Sanity checks before building.
+          out = (www / "index.html").read_text(encoding="utf-8")
+          checks = [
+              "Bunny Teacher",
+              "Raabiya",
+              "ABC",
+              "गिनती",
+              "मेमोरी",
+              "क्विज़",
+              "ड्रॉइंग",
+              "bunny-hero.png",
+              "bunny-teaching.png",
+              "bunny-celebrating.png",
+          ]
+          missing = [x for x in checks if x not in out]
+          if missing:
+              raise SystemExit("Standalone HTML missing expected content: " + repr(missing))
+
+          if "Built with Arena" in out:
+              print("Note: Arena banner text was only in outer shell; standalone frame does not contain it.")
+
+          print("Standalone Bunny Teacher source generated successfully")
+          print("HTML bytes:", len(out.encode("utf-8")))
+          print("Hero bytes:", (images / "bunny-hero.png").stat().st_size)
+          print("Teaching bytes:", (images / "bunny-teaching.png").stat().st_size)
+          print("Celebrating bytes:", (images / "bunny-celebrating.png").stat().st_size)
+          PY
+
+      - name: Commit standalone source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bunny-standalone
+          git commit -m "Create standalone Bunny Teacher Android app from extracted Arena content" || true
+          git push
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build standalone APK
+        run: gradle -p bunny-standalone :app:assembleDebug --stacktrace
+
+      - name: Verify APK
+        run: |
+          test -f bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bunny-Teacher-Standalone-APK
+          path: bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
