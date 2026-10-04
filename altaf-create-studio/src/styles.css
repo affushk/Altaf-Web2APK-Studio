@@ -249,3 +249,59 @@ html,body,#root,.editor-shell,.editor-topbar,.editor-workspace,.editor-bottom,.t
   align-items:center;
   justify-content:center;
 }
+
+
+/* Editing polish: text, photo, layers */
+.text-editor-controls{display:flex;flex-direction:column;gap:8px}
+.edit-copy-btn{
+  height:38px;border-radius:11px;background:#7454ff;display:flex;align-items:center;justify-content:center;gap:7px;font-size:10px;font-weight:800
+}
+.edit-copy-btn svg{width:16px}
+.control-row{
+  display:flex;flex-direction:column;gap:5px;padding:8px 9px;border-radius:12px;background:#151820;border:1px solid #272b35;color:#9ca2b2;font-size:9px
+}
+.control-row span{display:flex;justify-content:space-between;align-items:center}
+.control-row b{color:#fff}
+.control-row input[type="range"],.photo-sliders input[type="range"]{width:100%;accent-color:#7454ff}
+.text-button-row{display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:6px}
+.text-button-row button,.inline-color{
+  height:36px;border-radius:10px;background:#191c24;border:1px solid #2a2e38;display:flex;align-items:center;justify-content:center;gap:5px;font-size:9px
+}
+.text-button-row button.active{background:#241d3d;border-color:#7454ff;color:#c6baff}
+.text-button-row svg,.inline-color svg{width:15px}
+.inline-color{position:relative}
+.inline-color input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+
+.photo-sliders{
+  margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px
+}
+.photo-sliders label{
+  padding:8px;border-radius:11px;background:#151820;border:1px solid #272b35;color:#969cac;font-size:9px
+}
+.photo-sliders span{display:flex;justify-content:space-between;margin-bottom:5px}
+.photo-sliders b{color:#fff}
+
+.layer-actions{gap:3px}
+.layer-actions button.warn{background:#2b2025;color:#ff9aa6}
+.layer-actions button svg{width:13px}
+
+.text-modal-options{
+  display:grid;grid-template-columns:1fr .9fr 1.5fr;gap:7px;align-items:end;margin:5px 0 2px
+}
+.text-modal-options>label{margin:0}
+.text-modal-options>label input{height:38px;margin-top:5px}
+.text-modal-options>button,.align-picker{
+  height:38px;border-radius:10px;background:#1b1e26;border:1px solid #2b2f39
+}
+.text-modal-options>button{display:flex;align-items:center;justify-content:center;gap:5px;font-size:9px}
+.text-modal-options>button.active{border-color:#7454ff;background:#241d3d}
+.text-modal-options>button svg{width:15px}
+.align-picker{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden}
+.align-picker button{background:transparent;display:grid;place-items:center}
+.align-picker button.active{background:#7454ff}
+.align-picker svg{width:14px}
+
+@media(max-width:390px){
+  .text-button-row{grid-template-columns:1.4fr repeat(4,.8fr)}
+  .photo-sliders{grid-template-columns:1fr}
+}
