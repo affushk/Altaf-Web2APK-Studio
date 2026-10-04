@@ -36,13 +36,28 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb install -r bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
+            adb logcat -c
             adb shell am force-stop com.altaf.bunnyteacher
             adb shell monkey -p com.altaf.bunnyteacher -c android.intent.category.LAUNCHER 1
-            sleep 10
+
+            READY=0
+            for i in $(seq 1 150); do
+              if adb logcat -d -s BunnyTeacher:I '*:S' | grep -q "BUNNY_READY"; then
+                READY=1
+                break
+              fi
+              sleep 1
+            done
+
             adb exec-out screencap -p > bunny-android-screenshot.png
             adb shell uiautomator dump /sdcard/window.xml || true
             adb pull /sdcard/window.xml bunny-window.xml || true
-            adb logcat -d | grep -Ei "chromium|bunnyteacher|AndroidRuntime|crash|Console" > bunny-logcat.txt || true
+            adb logcat -d | grep -Ei "chromium|bunnyteacher|AndroidRuntime|crash|Console|BUNNY_" > bunny-logcat.txt || true
+
+            if [ "$READY" -ne 1 ]; then
+              echo "Bunny Teacher did not report ready state"
+              exit 2
+            fi
 
       - name: Sanity check screenshot exists
         run: |
