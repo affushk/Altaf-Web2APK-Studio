@@ -1,0 +1,104 @@
+name: Test Bunny Phase 4
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-bunny-phase4.yml'
+      - 'bunny-standalone/app/src/main/assets/www/phase4.*'
+      - 'bunny-standalone/app/src/main/assets/www/index.html'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Verify Phase 4
+        run: |
+          (cd bunny-standalone/app/src/main/assets/www && python3 -m http.server 8000 >/tmp/p4-http.log 2>&1) &
+          cat > p4-test.js <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:430,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+
+            await page.goto('http://127.0.0.1:8000/index.html');
+            await page.waitForTimeout(700);
+
+            await page.locator('#bunny-child-name').fill('Aafiya');
+            await page.locator('#bunny-child-age').fill('5');
+            await page.locator('#bunny-child-gender').selectOption('girl');
+            await page.locator('#bunny-profile-save').click();
+            await page.waitForTimeout(1900);
+
+            if(await page.locator('#bunny-p4-home').count()!==1) throw new Error('Phase 4 home missing');
+            const board=await page.locator('#bunny-p4-home').innerText();
+            if(!board.includes('Aafiya Adventure Board')) throw new Error('Adventure board not personalized');
+
+            // Avatar studio
+            await page.locator('#bunny-p4-avatar-btn').click();
+            await page.locator('[data-avatar="🦄"]').click();
+            await page.locator('#bunny-avatar-close').click();
+            if(!(await page.locator('#bunny-p4-home').innerText()).includes('Adventure Board')) throw new Error('Avatar return failed');
+            const p4=await page.evaluate(()=>window.BunnyPhase4.data());
+            if(p4.avatar!=='🦄') throw new Error('Avatar did not save');
+
+            // Give enough points for first treasure and verify claim.
+            await page.evaluate(()=>{
+              localStorage.setItem('bunny-teacher-progress',JSON.stringify({totalStars:12,lessonsLearned:4,gamesWon:1,modulesCompleted:[]}));
+            });
+            await page.locator('#bunny-p4-chest').click();
+            if(!(await page.locator('#bunny-p4-modal').innerText()).includes('reward ready')) throw new Error('Treasure readiness missing');
+            await page.locator('#bunny-chest-claim').click();
+            await page.waitForTimeout(250);
+            const rewards=await page.evaluate(()=>window.BunnyPhase4.data().rewards);
+            if(!rewards.claimed.includes(10)) throw new Error('Treasure reward not claimed');
+            await page.locator('#bunny-chest-close').click();
+
+            // Track module and smart recommendation.
+            await page.getByRole('button',{name:/ABC/i}).first().click();
+            await page.waitForTimeout(450);
+            await page.getByRole('button',{name:/वापस/}).click();
+            await page.waitForTimeout(450);
+            const after=await page.evaluate(()=>window.BunnyPhase4.data());
+            if(!(after.moduleCounts.alphabet>=1)) throw new Error('Module activity not tracked');
+
+            // Weekly report
+            await page.evaluate(()=>window.BunnyPhase4.report());
+            const report=await page.locator('#bunny-p4-report').innerText();
+            if(!report.includes('Aafiya Weekly Report')) throw new Error('Weekly report missing');
+            if(!report.includes('Total Points')) throw new Error('Report stats missing');
+            await page.locator('#bunny-report-close').click();
+
+            // Settings / bedtime mode
+            await page.evaluate(()=>window.BunnyPhase4.settings());
+            await page.locator('#p4-goal').selectOption('3');
+            await page.locator('#p4-night').selectOption('on');
+            await page.locator('#p4-hour').selectOption('20');
+            await page.locator('#p4-save').click();
+            const finalState=await page.evaluate(()=>window.BunnyPhase4.data());
+            if(finalState.weeklyGoal!==3 || finalState.nightEnabled!==true) throw new Error('Phase 4 settings did not save');
+
+            if(errors.length) throw new Error(errors.join(' | '));
+            await page.screenshot({path:'bunny-phase4-test.png',fullPage:true});
+            console.log('PHASE4_TEST_PASS');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node p4-test.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bunny-Phase4-Test
+          path: bunny-phase4-test.png
