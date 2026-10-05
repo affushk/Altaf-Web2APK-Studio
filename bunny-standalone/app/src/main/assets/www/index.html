@@ -314,6 +314,259 @@
         }
       })();
     </script>
+    <style id="bunny-premium-style">
+      :root{
+        --bunny-sky:#dff4ff;
+        --bunny-pink:#ffe5f1;
+        --bunny-lilac:#eee7ff;
+        --bunny-mint:#dcfaef;
+        --bunny-yellow:#fff4c7;
+        --bunny-ink:#475569;
+      }
+      html{background:linear-gradient(180deg,var(--bunny-sky),#fff,var(--bunny-pink));}
+      body{font-family:"Nunito",system-ui,-apple-system,sans-serif!important;overscroll-behavior:none;}
+      #root{position:relative;z-index:2}
+      #bunny-magic-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+      .bunny-bg-float{position:absolute;opacity:.22;filter:drop-shadow(0 8px 12px rgba(125,90,180,.12));animation:bunnyFloat var(--dur,10s) ease-in-out infinite;animation-delay:var(--delay,0s);font-size:var(--size,30px)}
+      @keyframes bunnyFloat{0%,100%{transform:translate3d(0,10px,0) rotate(-3deg)}50%{transform:translate3d(14px,-24px,0) rotate(5deg)}}
+      @keyframes bunnyTapPop{0%{transform:scale(1)}38%{transform:scale(.91)}70%{transform:scale(1.06)}100%{transform:scale(1)}}
+      @keyframes bunnySparkleOut{0%{opacity:1;transform:translate(-50%,-50%) scale(.3) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.25) rotate(150deg)}}
+      @keyframes bunnyPraiseIn{0%{opacity:0;transform:translate(-50%,12px) scale(.75)}70%{transform:translate(-50%,-4px) scale(1.05)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+      @keyframes bunnyConfetti{0%{transform:translateY(-15vh) rotate(0);opacity:1}100%{transform:translateY(115vh) rotate(620deg);opacity:.1}}
+      @keyframes bunnySplashBounce{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+      .bunny-tap-pop{animation:bunnyTapPop .38s cubic-bezier(.2,.9,.3,1)}
+      .bunny-spark{position:fixed;z-index:100005;pointer-events:none;font-size:18px;animation:bunnySparkleOut .7s ease-out forwards}
+      #bunny-premium-welcome{margin:0 auto 14px;max-width:780px;border:2px solid rgba(255,255,255,.88);border-radius:28px;padding:14px 15px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(246,238,255,.93));box-shadow:0 12px 30px rgba(94,72,160,.13);backdrop-filter:blur(12px)}
+      #bunny-premium-welcome .bpw-top{display:flex;align-items:center;gap:12px}
+      #bunny-premium-welcome .bpw-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:27px;background:linear-gradient(145deg,#fff,#f3e8ff);box-shadow:0 5px 15px rgba(124,58,237,.16)}
+      #bunny-premium-welcome .bpw-title{font-size:18px;font-weight:900;color:#6d28d9;line-height:1.2}
+      #bunny-premium-welcome .bpw-sub{font-size:12px;color:#64748b;font-weight:700;margin-top:2px}
+      #bunny-premium-welcome .bpw-actions{display:flex;gap:8px;margin-top:11px}
+      #bunny-premium-welcome button{flex:1;border:0;border-radius:16px;padding:10px 8px;font-weight:900;font-size:12px;box-shadow:0 6px 14px rgba(0,0,0,.08)}
+      #bunny-daily-gift{background:linear-gradient(135deg,#fde68a,#f9a8d4);color:#7c2d12}
+      #bunny-sticker-book{background:linear-gradient(135deg,#bae6fd,#ddd6fe);color:#5b21b6}
+      #bunny-parent-launch{position:fixed;right:14px;bottom:91px;z-index:99990;width:48px;height:48px;border:2px solid #fff;border-radius:50%;background:linear-gradient(145deg,#ffffff,#e0f2fe);box-shadow:0 8px 22px rgba(30,64,175,.18);font-size:22px;display:grid;place-items:center}
+      #bunny-parent-modal,#bunny-sticker-modal{position:fixed;inset:0;z-index:100010;background:rgba(67,56,117,.34);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px}
+      .bunny-premium-card{width:min(430px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#fff,#fffafd);border:2px solid #fff;border-radius:30px;padding:20px;box-shadow:0 24px 70px rgba(76,29,149,.24)}
+      .bunny-premium-card h3{margin:0 0 5px;text-align:center;color:#6d28d9;font-size:24px;font-weight:900}
+      .bunny-premium-card .bunny-card-sub{text-align:center;color:#64748b;font-size:13px;margin-bottom:14px}
+      .bunny-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 10px;border-radius:18px;background:#f8fafc;margin:8px 0}
+      .bunny-setting-row strong{display:block;color:#475569;font-size:14px}
+      .bunny-setting-row small{display:block;color:#94a3b8;font-size:11px;margin-top:2px}
+      .bunny-switch{width:50px;height:29px;border-radius:999px;border:0;background:#cbd5e1;padding:3px;transition:.2s}
+      .bunny-switch span{display:block;width:23px;height:23px;border-radius:50%;background:white;box-shadow:0 2px 6px rgba(0,0,0,.16);transition:.2s}
+      .bunny-switch.on{background:linear-gradient(90deg,#38bdf8,#a78bfa)}
+      .bunny-switch.on span{transform:translateX(21px)}
+      .bunny-parent-action{width:100%;border:0;border-radius:17px;padding:12px;margin-top:8px;font-weight:900;background:linear-gradient(90deg,#dbeafe,#ede9fe);color:#5b21b6}
+      .bunny-parent-close{width:100%;border:0;border-radius:17px;padding:12px;margin-top:12px;font-weight:900;background:#334155;color:white}
+      #bunny-praise{position:fixed;left:50%;top:18%;z-index:100004;transform:translateX(-50%);padding:10px 15px;border-radius:18px;background:rgba(255,255,255,.96);border:2px solid #fde68a;box-shadow:0 10px 30px rgba(91,33,182,.18);font-weight:900;color:#7c3aed;white-space:nowrap;animation:bunnyPraiseIn .35s ease-out}
+      #bunny-splash-premium{position:fixed;inset:0;z-index:100020;background:linear-gradient(145deg,#dff4ff,#f5e9ff 48%,#ffe5f1);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+      #bunny-splash-premium img{width:145px;height:145px;object-fit:contain;border-radius:34px;filter:drop-shadow(0 18px 28px rgba(124,58,237,.22));animation:bunnySplashBounce 1.2s ease-in-out infinite}
+      #bunny-splash-premium h2{font-size:30px;color:#6d28d9;margin:16px 0 4px;font-weight:900}
+      #bunny-splash-premium p{margin:0;color:#64748b;font-weight:800}
+      .bunny-confetti-piece{position:fixed;top:-8vh;z-index:100003;pointer-events:none;animation:bunnyConfetti var(--fall,2.2s) linear forwards;font-size:18px}
+      .fixed.bottom-0.left-0.right-0{left:8px!important;right:8px!important;bottom:7px!important;border-radius:24px!important;border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 12px 35px rgba(76,29,149,.16)!important;padding-bottom:max(2px,env(safe-area-inset-bottom))!important}
+      .fixed.bottom-0.left-0.right-0 button{min-height:52px;border-radius:18px!important}
+      .fixed.bottom-0.left-0.right-0 button.scale-110{background:linear-gradient(145deg,#e0f2fe,#f3e8ff)!important;box-shadow:0 6px 14px rgba(99,102,241,.12)}
+      .sticky.top-0{border-radius:0 0 24px 24px!important;border-bottom:1px solid rgba(255,255,255,.9)!important;box-shadow:0 8px 22px rgba(76,29,149,.10)!important}
+      .rounded-2xl{border-radius:22px!important}
+      .rounded-3xl{border-radius:28px!important}
+      button{-webkit-tap-highlight-color:transparent}
+      body.bunny-calm #bunny-magic-bg{opacity:.35}
+      body.bunny-calm{filter:saturate(.82)}
+      body.bunny-reduced-motion *,body.bunny-reduced-motion *:before,body.bunny-reduced-motion *:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.08s!important}
+      @media (prefers-reduced-motion:reduce){.bunny-bg-float{animation:none}.bunny-confetti-piece{display:none}}
+    </style>
+    <script>
+      // BUNNY_PREMIUM_KIDS_UI_V1
+      (function(){
+        var SETTINGS_KEY="bunny-premium-settings-v1";
+        var STICKERS_KEY="bunny-premium-stickers-v1";
+        var STREAK_KEY="bunny-premium-streak-v1";
+        var TAP_KEY="bunny-premium-learning-taps-v1";
+        var settings={sounds:true,motion:true,calm:false};
+
+        function readJson(key,fallback){try{var v=JSON.parse(localStorage.getItem(key)||"null");return v==null?fallback:v}catch(e){return fallback}}
+        function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}}
+        function profile(){try{return window.BunnyProfile&&window.BunnyProfile.get?window.BunnyProfile.get():null}catch(e){return null}}
+        function childName(){var p=profile();return p&&p.name?p.name:"Little Star"}
+        function childAge(){var p=profile();return p&&p.age?Number(p.age):6}
+        function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+        function dateDiff(a,b){try{return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000)}catch(e){return 99}}
+
+        function loadSettings(){
+          var saved=readJson(SETTINGS_KEY,{});
+          settings={sounds:saved.sounds!==false,motion:saved.motion!==false,calm:!!saved.calm};
+          applySettings();
+        }
+        function applySettings(){
+          document.body&&document.body.classList.toggle("bunny-reduced-motion",!settings.motion);
+          document.body&&document.body.classList.toggle("bunny-calm",settings.calm);
+          writeJson(SETTINGS_KEY,settings);
+        }
+
+        function updateStreak(){
+          var s=readJson(STREAK_KEY,{last:null,count:0});
+          var t=today();
+          if(s.last!==t){
+            if(s.last&&dateDiff(s.last,t)===1)s.count=(s.count||0)+1;
+            else s.count=1;
+            s.last=t;
+            writeJson(STREAK_KEY,s);
+          }
+          return s.count||1;
+        }
+
+        function makeBg(){
+          if(document.getElementById("bunny-magic-bg"))return;
+          var bg=document.createElement("div");bg.id="bunny-magic-bg";bg.setAttribute("data-bunny-premium-ui","1");
+          var items=["☁️","⭐","🌈","🎈","✨","🦋","☁️","🌸","💫","⭐","🎈","☁️"];
+          var age=childAge(), count=age<=5?12:age<=8?9:6;
+          for(var i=0;i<count;i++){
+            var el=document.createElement("span");el.className="bunny-bg-float";el.textContent=items[i%items.length];
+            el.style.left=((i*17+7)%92)+"%";el.style.top=((i*23+5)%88)+"%";
+            el.style.setProperty("--dur",(8+(i%5)*1.7)+"s");el.style.setProperty("--delay",(-i*.8)+"s");el.style.setProperty("--size",(22+(i%4)*7)+"px");
+            bg.appendChild(el);
+          }
+          document.body.appendChild(bg);
+        }
+
+        function softTone(kind){
+          if(!settings.sounds)return;
+          try{
+            var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+            var ctx=window.__bunnyPremiumAudio||(window.__bunnyPremiumAudio=new C());
+            if(ctx.state==="suspended")ctx.resume();
+            var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);
+            var now=ctx.currentTime, f=kind==="reward"?660:520;
+            o.frequency.setValueAtTime(f,now);o.frequency.exponentialRampToValueAtTime(kind==="reward"?990:650,now+.12);
+            g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+.18);
+            o.start(now);o.stop(now+.2);
+          }catch(e){}
+        }
+
+        function sparkle(x,y){
+          if(!settings.motion)return;
+          var chars=["✨","⭐","💫","🌟"];
+          for(var i=0;i<4;i++){
+            var s=document.createElement("span");s.className="bunny-spark";s.textContent=chars[i%chars.length];s.style.left=x+"px";s.style.top=y+"px";
+            s.style.setProperty("--dx",((-45+i*30))+"px");s.style.setProperty("--dy",((-50-(i%2)*22))+"px");
+            document.body.appendChild(s);setTimeout(function(n){return function(){n.remove()}}(s),850);
+          }
+        }
+
+        function confetti(){
+          if(!settings.motion)return;
+          var chars=["⭐","✨","🎉","🌸","💜","💙","🌈"];
+          for(var i=0;i<28;i++){
+            var c=document.createElement("span");c.className="bunny-confetti-piece";c.textContent=chars[i%chars.length];
+            c.style.left=((i*37+Math.random()*15)%100)+"vw";c.style.setProperty("--fall",(1.8+Math.random()*1.4)+"s");c.style.animationDelay=(Math.random()*.25)+"s";
+            document.body.appendChild(c);setTimeout(function(n){return function(){n.remove()}}(c),3600);
+          }
+          softTone("reward");
+        }
+
+        function praise(){
+          var old=document.getElementById("bunny-praise");if(old)old.remove();
+          var p=document.createElement("div");p.id="bunny-praise";p.setAttribute("data-bunny-premium-ui","1");
+          var n=childName();var lines=["🌟 Wow "+n+"!","👏 Shabash "+n+"!","🎉 Great job "+n+"!","🐰 Bunny is proud of you!"];
+          p.textContent=lines[Math.floor(Math.random()*lines.length)];document.body.appendChild(p);
+          setTimeout(function(){p.remove()},1450);
+        }
+
+        function isLearningButton(btn){
+          var t=(btn.innerText||btn.textContent||"").trim();
+          return /^[A-Z]$/.test(t)||/^(?:[0-9]|10)$/.test(t)||/✅|चेक|New Game|फिर से गिनो/.test(t);
+        }
+
+        function clickMagic(e){
+          var btn=e.target&&e.target.closest?e.target.closest("button"):null;if(!btn)return;
+          btn.classList.remove("bunny-tap-pop");void btn.offsetWidth;btn.classList.add("bunny-tap-pop");
+          setTimeout(function(){btn.classList.remove("bunny-tap-pop")},430);
+          sparkle(e.clientX||innerWidth/2,e.clientY||innerHeight/2);
+          try{if(navigator.vibrate)navigator.vibrate(12)}catch(err){}
+          if(isLearningButton(btn)){
+            var taps=(parseInt(localStorage.getItem(TAP_KEY)||"0",10)||0)+1;localStorage.setItem(TAP_KEY,String(taps));
+            if(taps%4===0){praise();confetti()}
+          }
+        }
+
+        function stickerState(){return readJson(STICKERS_KEY,{last:null,items:[]})}
+        function showStickerBook(){
+          if(document.getElementById("bunny-sticker-modal"))return;
+          var s=stickerState(), m=document.createElement("div");m.id="bunny-sticker-modal";m.setAttribute("data-bunny-premium-ui","1");
+          var items=s.items&&s.items.length?s.items.map(function(x){return '<span style="font-size:42px">'+x+'</span>'}).join(""):'<p style="color:#94a3b8;font-weight:800">Daily Magic se stickers collect karo ✨</p>';
+          m.innerHTML='<div class="bunny-premium-card"><h3>🌟 '+childName()+'\'s Sticker Book</h3><p class="bunny-card-sub">Your happy little collection</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;padding:12px">'+items+'</div><button class="bunny-parent-close" id="bunny-sticker-close">Done 💜</button></div>';
+          document.body.appendChild(m);document.getElementById("bunny-sticker-close").onclick=function(){m.remove()};
+        }
+        function dailyGift(){
+          var s=stickerState(),t=today(), stickers=["🦄","🐰","🌈","🦋","🐥","🐳","🍓","🚀","🌟","🎨","🧸","🐼"];
+          if(s.last===t){showStickerBook();return}
+          var pick=stickers[(new Date().getDate()+childName().length)%stickers.length];
+          s.last=t;s.items=s.items||[];s.items.push(pick);if(s.items.length>24)s.items=s.items.slice(-24);writeJson(STICKERS_KEY,s);
+          confetti();praise();setTimeout(function(){showStickerBook()},650);refreshWelcome();
+        }
+
+        function welcomeNode(){
+          var h2=[].slice.call(document.querySelectorAll("h2")).find(function(x){return (x.innerText||"").indexOf("क्या सीखना है")>=0});
+          if(!h2)return null;
+          return h2.parentElement||h2;
+        }
+        function refreshWelcome(){
+          var host=welcomeNode();if(!host){var old=document.getElementById("bunny-premium-welcome");if(old)old.remove();return}
+          var existing=document.getElementById("bunny-premium-welcome");if(existing)existing.remove();
+          var p=profile(), gender=p&&p.gender, avatar=gender==="girl"?"👧":gender==="boy"?"👦":"🧒", streak=updateStreak(), st=stickerState();
+          var card=document.createElement("div");card.id="bunny-premium-welcome";card.setAttribute("data-bunny-premium-ui","1");
+          card.innerHTML='<div class="bpw-top"><div class="bpw-avatar">'+avatar+'</div><div style="flex:1"><div class="bpw-title">Hi '+childName()+'! Ready for a magical learning day? ✨</div><div class="bpw-sub">🔥 '+streak+' day learning streak • Learn, play & shine!</div></div></div><div class="bpw-actions"><button id="bunny-daily-gift">'+(st.last===today()?'🎁 Today\'s sticker collected':'🎁 Daily Magic Gift')+'</button><button id="bunny-sticker-book">⭐ Sticker Book</button></div>';
+          host.insertBefore(card,host.firstChild);
+          document.getElementById("bunny-daily-gift").onclick=dailyGift;document.getElementById("bunny-sticker-book").onclick=showStickerBook;
+        }
+
+        function parentModal(){
+          if(document.getElementById("bunny-parent-modal"))return;
+          var m=document.createElement("div");m.id="bunny-parent-modal";m.setAttribute("data-bunny-premium-ui","1");
+          function row(id,title,sub,on){return '<div class="bunny-setting-row"><div><strong>'+title+'</strong><small>'+sub+'</small></div><button class="bunny-switch '+(on?'on':'')+'" id="'+id+'"><span></span></button></div>'}
+          m.innerHTML='<div class="bunny-premium-card"><div style="font-size:46px;text-align:center">👨‍👩‍👧</div><h3>Parent Zone</h3><p class="bunny-card-sub">'+childName()+' • Age '+childAge()+'</p>'+
+            row("bunny-set-sound","Extra happy sounds","Reward chimes from premium theme",settings.sounds)+
+            row("bunny-set-motion","Animations","Clouds, sparkles & celebrations",settings.motion)+
+            row("bunny-set-calm","Calm mode","Softer colors and less visual activity",settings.calm)+
+            '<button class="bunny-parent-action" id="bunny-edit-profile">👤 Edit Child Profile</button>'+
+            '<button class="bunny-parent-action" id="bunny-open-stickers">⭐ Open Sticker Book</button>'+
+            '<button class="bunny-parent-close" id="bunny-parent-close">Done</button></div>';
+          document.body.appendChild(m);
+          function toggle(id,key){document.getElementById(id).onclick=function(){settings[key]=!settings[key];this.classList.toggle("on",settings[key]);applySettings()}}
+          toggle("bunny-set-sound","sounds");toggle("bunny-set-motion","motion");toggle("bunny-set-calm","calm");
+          document.getElementById("bunny-edit-profile").onclick=function(){m.remove();try{window.BunnyProfile.edit()}catch(e){}};
+          document.getElementById("bunny-open-stickers").onclick=function(){m.remove();showStickerBook()};
+          document.getElementById("bunny-parent-close").onclick=function(){m.remove()};
+        }
+        function addParentButton(){
+          if(document.getElementById("bunny-parent-launch"))return;
+          var b=document.createElement("button");b.id="bunny-parent-launch";b.type="button";b.textContent="👨‍👩‍👧";b.title="Parent Zone";b.setAttribute("aria-label","Open Parent Zone");b.setAttribute("data-bunny-premium-ui","1");b.onclick=parentModal;document.body.appendChild(b);
+        }
+
+        function splash(){
+          if(sessionStorage.getItem("bunny-premium-splash")==="done"||!profile())return;
+          sessionStorage.setItem("bunny-premium-splash","done");
+          var s=document.createElement("div");s.id="bunny-splash-premium";s.setAttribute("data-bunny-premium-ui","1");
+          s.innerHTML='<img src="images/bunny-hero.png" alt="Bunny"><h2>Hello '+childName()+'! 🌈</h2><p>Let\'s learn, play and shine ⭐</p>';
+          document.body.appendChild(s);
+          setTimeout(function(){s.style.transition="opacity .35s ease";s.style.opacity="0";setTimeout(function(){s.remove()},380)},1250);
+        }
+
+        function decorate(){
+          refreshWelcome();addParentButton();
+        }
+        function start(){
+          if(!document.body)return;
+          loadSettings();makeBg();addParentButton();splash();decorate();
+          document.addEventListener("click",clickMagic,true);
+          var timer=null,mo=new MutationObserver(function(){clearTimeout(timer);timer=setTimeout(decorate,100)});
+          mo.observe(document.getElementById("root")||document.body,{childList:true,subtree:true});
+        }
+        if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
+      })();
+    </script>
     <script type="module" crossorigin="">(function(){const O=document.createElement("link").relList;if(O&&O.supports&&O.supports("modulepreload"))return;for(const g of document.querySelectorAll('link[rel="modulepreload"]'))f(g);new MutationObserver(g=>{for(const H of g)if(H.type==="childList")for(const B of H.addedNodes)B.tagName==="LINK"&&B.rel==="modulepreload"&&f(B)}).observe(document,{childList:!0,subtree:!0});function _(g){const H={};return g.integrity&&(H.integrity=g.integrity),g.referrerPolicy&&(H.referrerPolicy=g.referrerPolicy),g.crossOrigin==="use-credentials"?H.credentials="include":g.crossOrigin==="anonymous"?H.credentials="omit":H.credentials="same-origin",H}function f(g){if(g.ep)return;g.ep=!0;const H=_(g);fetch(g.href,H)}})();var js={exports:{}},Qn={};var Dr;function vh(){if(Dr)return Qn;Dr=1;var r=Symbol.for("react.transitional.element"),O=Symbol.for("react.fragment");function _(f,g,H){var B=null;if(H!==void 0&&(B=""+H),g.key!==void 0&&(B=""+g.key),"key"in g){H={};for(var D in g)D!=="key"&&(H[D]=g[D])}else H=g;return g=H.ref,{$$typeof:r,type:f,key:B,ref:g!==void 0?g:null,props:H}}return Qn.Fragment=O,Qn.jsx=_,Qn.jsxs=_,Qn}var Or;function jh(){return Or||(Or=1,js.exports=vh()),js.exports}var u=jh(),Ss={exports:{}},te={};var Ur;function Sh(){if(Ur)return te;Ur=1;var r=Symbol.for("react.transitional.element"),O=Symbol.for("react.portal"),_=Symbol.for("react.fragment"),f=Symbol.for("react.strict_mode"),g=Symbol.for("react.profiler"),H=Symbol.for("react.consumer"),B=Symbol.for("react.context"),D=Symbol.for("react.forward_ref"),j=Symbol.for("react.suspense"),h=Symbol.for("react.memo"),N=Symbol.for("react.lazy"),w=Symbol.for("react.activity"),U=Symbol.iterator;function L(o){return o===null||typeof o!="object"?null:(o=U&&o[U]||o["@@iterator"],typeof o=="function"?o:null)}var Q={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},W=Object.assign,Ce={};function xe(o,b,T){this.props=o,this.context=b,this.refs=Ce,this.updater=T||Q}xe.prototype.isReactComponent={},xe.prototype.setState=function(o,b){if(typeof o!="object"&&typeof o!="function"&&o!=null)throw Error("takes an object of state variables to update or a function which returns an object of state variables.");this.updater.enqueueSetState(this,o,b,"setState")},xe.prototype.forceUpdate=function(o){this.updater.enqueueForceUpdate(this,o,"forceUpdate")};function ve(){}ve.prototype=xe.prototype;function J(o,b,T){this.props=o,this.context=b,this.refs=Ce,this.updater=T||Q}var X=J.prototype=new ve;X.constructor=J,W(X,xe.prototype),X.isPureReactComponent=!0;var q=Array.isArray;function K(){}var V={H:null,A:null,T:null,S:null},ue=Object.prototype.hasOwnProperty;function P(o,b,T){var R=T.ref;return{$$typeof:r,type:o,key:b,ref:R!==void 0?R:null,props:T}}function ae(o,b){return P(o.type,b,o.props)}function He(o){return typeof o=="object"&&o!==null&&o.$$typeof===r}function Oe(o){var b={"=":"=0",":":"=2"};return"$"+o.replace(/[=:]/g,function(T){return b[T]})}var Lt=/\/+/g;function vt(o,b){return typeof o=="object"&&o!==null&&o.key!=null?Oe(""+o.key):b.toString(36)}function Pe(o){switch(o.status){case"fulfilled":return o.value;case"rejected":throw o.reason;default:switch(typeof o.status=="string"?o.then(K,K):(o.status="pending",o.then(function(b){o.status==="pending"&&(o.status="fulfilled",o.value=b)},function(b){o.status==="pending"&&(o.status="rejected",o.reason=b)})),o.status){case"fulfilled":return o.value;case"rejected":throw o.reason}}throw o}function M(o,b,T,R,I){var le=typeof o;(le==="undefined"||le==="boolean")&&(o=null);var ee=!1;if(o===null)ee=!0;else switch(le){case"bigint":case"string":case"number":ee=!0;break;case"object":switch(o.$$typeof){case r:case O:ee=!0;break;case N:return ee=o._init,M(ee(o._payload),b,T,R,I)}}if(ee)return I=I(o),ee=R===""?"."+vt(o,0):R,q(I)?(T="",ee!=null&&(T=ee.replace(Lt,"$&/")+"/"),M(I,b,T,"",function(jt){return jt})):I!=null&&(He(I)&&(I=ae(I,T+(I.key==null||o&&o.key===I.key?"":(""+I.key).replace(Lt,"$&/")+"/")+ee)),b.push(I)),1;ee=0;var Ge=R===""?".":R+":";if(q(o))for(var ze=0;ze<o.length;ze++)R=o[ze],le=Ge+vt(R,ze),ee+=M(R,b,T,le,I);else if(ze=L(o),typeof ze=="function")for(o=ze.call(o),ze=0;!(R=o.next()).done;)R=R.value,le=Ge+vt(R,ze++),ee+=M(R,b,T,le,I);else if(le==="object"){if(typeof o.then=="function")return M(Pe(o),b,T,R,I);throw b=String(o),Error("Objects are not valid as a React child (found: "+(b==="[object Object]"?"object with keys {"+Object.keys(o).join(", ")+"}":b)+"). If you meant to render a collection of children, use an array instead.")}return ee}function Y(o,b,T){if(o==null)return o;var R=[],I=0;return M(o,R,"","",function(le){return b.call(T,le,I++)}),R}function F(o){if(o._status===-1){var b=o._result;b=b(),b.then(function(T){(o._status===0||o._status===-1)&&(o._status=1,o._result=T)},function(T){(o._status===0||o._status===-1)&&(o._status=2,o._result=T)}),o._status===-1&&(o._status=0,o._result=b)}if(o._status===1)return o._result.default;throw o._result}var ge=typeof reportError=="function"?reportError:function(o){if(typeof window=="object"&&typeof window.ErrorEvent=="function"){var b=new window.ErrorEvent("error",{bubbles:!0,cancelable:!0,message:typeof o=="object"&&o!==null&&typeof o.message=="string"?String(o.message):String(o),error:o});if(!window.dispatchEvent(b))return}else if(typeof process=="object"&&typeof process.emit=="function"){process.emit("uncaughtException",o);return}console.error(o)},ye={map:Y,forEach:function(o,b,T){Y(o,function(){b.apply(this,arguments)},T)},count:function(o){var b=0;return Y(o,function(){b++}),b},toArray:function(o){return Y(o,function(b){return b})||[]},only:function(o){if(!He(o))throw Error("React.Children.only expected to receive a single React element child.");return o}};return te.Activity=w,te.Children=ye,te.Component=xe,te.Fragment=_,te.Profiler=g,te.PureComponent=J,te.StrictMode=f,te.Suspense=j,te.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE=V,te.__COMPILER_RUNTIME={__proto__:null,c:function(o){return V.H.useMemoCache(o)}},te.cache=function(o){return function(){return o.apply(null,arguments)}},te.cacheSignal=function(){return null},te.cloneElement=function(o,b,T){if(o==null)throw Error("The argument must be a React element, but you passed "+o+".");var R=W({},o.props),I=o.key;if(b!=null)for(le in b.key!==void 0&&(I=""+b.key),b)!ue.call(b,le)||le==="key"||le==="__self"||le==="__source"||le==="ref"&&b.ref===void 0||(R[le]=b[le]);var le=arguments.length-2;if(le===1)R.children=T;else if(1<le){for(var ee=Array(le),Ge=0;Ge<le;Ge++)ee[Ge]=arguments[Ge+2];R.children=ee}return P(o.type,I,R)},te.createContext=function(o){return o={$$typeof:B,_currentValue:o,_currentValue2:o,_threadCount:0,Provider:null,Consumer:null},o.Provider=o,o.Consumer={$$typeof:H,_context:o},o},te.createElement=function(o,b,T){var R,I={},le=null;if(b!=null)for(R in b.key!==void 0&&(le=""+b.key),b)ue.call(b,R)&&R!=="key"&&R!=="__self"&&R!=="__source"&&(I[R]=b[R]);var ee=arguments.length-2;if(ee===1)I.children=T;else if(1<ee){for(var Ge=Array(ee),ze=0;ze<ee;ze++)Ge[ze]=arguments[ze+2];I.children=Ge}if(o&&o.defaultProps)for(R in ee=o.defaultProps,ee)I[R]===void 0&&(I[R]=ee[R]);return P(o,le,I)},te.createRef=function(){return{current:null}},te.forwardRef=function(o){return{$$typeof:D,render:o}},te.isValidElement=He,te.lazy=function(o){return{$$typeof:N,_payload:{_status:-1,_result:o},_init:F}},te.memo=function(o,b){return{$$typeof:h,type:o,compare:b===void 0?null:b}},te.startTransition=function(o){var b=V.T,T={};V.T=T;try{var R=o(),I=V.S;I!==null&&I(T,R),typeof R=="object"&&R!==null&&typeof R.then=="function"&&R.then(K,ge)}catch(le){ge(le)}finally{b!==null&&T.types!==null&&(b.types=T.types),V.T=b}},te.unstable_useCacheRefresh=function(){return V.H.useCacheRefresh()},te.use=function(o){return V.H.use(o)},te.useActionState=function(o,b,T){return V.H.useActionState(o,b,T)},te.useCallback=function(o,b){return V.H.useCallback(o,b)},te.useContext=function(o){return V.H.useContext(o)},te.useDebugValue=function(){},te.useDeferredValue=function(o,b){return V.H.useDeferredValue(o,b)},te.useEffect=function(o,b){return V.H.useEffect(o,b)},te.useEffectEvent=function(o){return V.H.useEffectEvent(o)},te.useId=function(){return V.H.useId()},te.useImperativeHandle=function(o,b,T){return V.H.useImperativeHandle(o,b,T)},te.useInsertionEffect=function(o,b){return V.H.useInsertionEffect(o,b)},te.useLayoutEffect=function(o,b){return V.H.useLayoutEffect(o,b)},te.useMemo=function(o,b){return V.H.useMemo(o,b)},te.useOptimistic=function(o,b){return V.H.useOptimistic(o,b)},te.useReducer=function(o,b,T){return V.H.useReducer(o,b,T)},te.useRef=function(o){return V.H.useRef(o)},te.useState=function(o){return V.H.useState(o)},te.useSyncExternalStore=function(o,b,T){return V.H.useSyncExternalStore(o,b,T)},te.useTransition=function(){return V.H.useTransition()},te.version="19.2.6",te}var Br;function Hs(){return Br||(Br=1,Ss.exports=Sh()),Ss.exports}var A=Hs(),Ns={exports:{}},Ln={},Ms={exports:{}},Ts={};var Rr;function Nh(){return Rr||(Rr=1,(function(r){function O(M,Y){var F=M.length;M.push(Y);e:for(;0<F;){var ge=F-1>>>1,ye=M[ge];if(0<g(ye,Y))M[ge]=Y,M[F]=ye,F=ge;else break e}}function _(M){return M.length===0?null:M[0]}function f(M){if(M.length===0)return null;var Y=M[0],F=M.pop();if(F!==Y){M[0]=F;e:for(var ge=0,ye=M.length,o=ye>>>1;ge<o;){var b=2*(ge+1)-1,T=M[b],R=b+1,I=M[R];if(0>g(T,F))R<ye&&0>g(I,T)?(M[ge]=I,M[R]=F,ge=R):(M[ge]=T,M[b]=F,ge=b);else if(R<ye&&0>g(I,F))M[ge]=I,M[R]=F,ge=R;else break e}}return Y}function g(M,Y){var F=M.sortIndex-Y.sortIndex;return F!==0?F:M.id-Y.id}if(r.unstable_now=void 0,typeof performance=="object"&&typeof performance.now=="function"){var H=performance;r.unstable_now=function(){return H.now()}}else{var B=Date,D=B.now();r.unstable_now=function(){return B.now()-D}}var j=[],h=[],N=1,w=null,U=3,L=!1,Q=!1,W=!1,Ce=!1,xe=typeof setTimeout=="function"?setTimeout:null,ve=typeof clearTimeout=="function"?clearTimeout:null,J=typeof setImmediate<"u"?setImmediate:null;function X(M){for(var Y=_(h);Y!==null;){if(Y.callback===null)f(h);else if(Y.startTime<=M)f(h),Y.sortIndex=Y.expirationTime,O(j,Y);else break;Y=_(h)}}function q(M){if(W=!1,X(M),!Q)if(_(j)!==null)Q=!0,K||(K=!0,Oe());else{var Y=_(h);Y!==null&&Pe(q,Y.startTime-M)}}var K=!1,V=-1,ue=5,P=-1;function ae(){return Ce?!0:!(r.unstable_now()-P<ue)}function He(){if(Ce=!1,K){var M=r.unstable_now();P=M;var Y=!0;try{e:{Q=!1,W&&(W=!1,ve(V),V=-1),L=!0;var F=U;try{t:{for(X(M),w=_(j);w!==null&&!(w.expirationTime>M&&ae());){var ge=w.callback;if(typeof ge=="function"){w.callback=null,U=w.priorityLevel;var ye=ge(w.expirationTime<=M);if(M=r.unstable_now(),typeof ye=="function"){w.callback=ye,X(M),Y=!0;break t}w===_(j)&&f(j),X(M)}else f(j);w=_(j)}if(w!==null)Y=!0;else{var o=_(h);o!==null&&Pe(q,o.startTime-M),Y=!1}}break e}finally{w=null,U=F,L=!1}Y=void 0}}finally{Y?Oe():K=!1}}}var Oe;if(typeof J=="function")Oe=function(){J(He)};else if(typeof MessageChannel<"u"){var Lt=new MessageChannel,vt=Lt.port2;Lt.port1.onmessage=He,Oe=function(){vt.postMessage(null)}}else Oe=function(){xe(He,0)};function Pe(M,Y){V=xe(function(){M(r.unstable_now())},Y)}r.unstable_IdlePriority=5,r.unstable_ImmediatePriority=1,r.unstable_LowPriority=4,r.unstable_NormalPriority=3,r.unstable_Profiling=null,r.unstable_UserBlockingPriority=2,r.unstable_cancelCallback=function(M){M.callback=null},r.unstable_forceFrameRate=function(M){0>M||125<M?console.error("forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"):ue=0<M?Math.floor(1e3/M):5},r.unstable_getCurrentPriorityLevel=function(){return U},r.unstable_next=function(M){switch(U){case 1:case 2:case 3:var Y=3;break;default:Y=U}var F=U;U=Y;try{return M()}finally{U=F}},r.unstable_requestPaint=function(){Ce=!0},r.unstable_runWithPriority=function(M,Y){switch(M){case 1:case 2:case 3:case 4:case 5:break;default:M=3}var F=U;U=M;try{return Y()}finally{U=F}},r.unstable_scheduleCallback=function(M,Y,F){var ge=r.unstable_now();switch(typeof F=="object"&&F!==null?(F=F.delay,F=typeof F=="number"&&0<F?ge+F:ge):F=ge,M){case 1:var ye=-1;break;case 2:ye=250;break;case 5:ye=1073741823;break;case 4:ye=1e4;break;default:ye=5e3}return ye=F+ye,M={id:N++,callback:Y,priorityLevel:M,startTime:F,expirationTime:ye,sortIndex:-1},F>ge?(M.sortIndex=F,O(h,M),_(j)===null&&M===_(h)&&(W?(ve(V),V=-1):W=!0,Pe(q,F-ge))):(M.sortIndex=ye,O(j,M),Q||L||(Q=!0,K||(K=!0,Oe()))),M},r.unstable_shouldYield=ae,r.unstable_wrapCallback=function(M){var Y=U;return function(){var F=U;U=Y;try{return M.apply(this,arguments)}finally{U=F}}}})(Ts)),Ts}var qr;function Mh(){return qr||(qr=1,Ms.exports=Nh()),Ms.exports}var Es={exports:{}},Ie={};var Qr;function Th(){if(Qr)return Ie;Qr=1;var r=Hs();function O(j){var h="https://react.dev/errors/"+j;if(1<arguments.length){h+="?args[]="+encodeURIComponent(arguments[1]);for(var N=2;N<arguments.length;N++)h+="&args[]="+encodeURIComponent(arguments[N])}return"Minified React error #"+j+"; visit "+h+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}function _(){}var f={d:{f:_,r:function(){throw Error(O(522))},D:_,C:_,L:_,m:_,X:_,S:_,M:_},p:0,findDOMNode:null},g=Symbol.for("react.portal");function H(j,h,N){var w=3<arguments.length&&arguments[3]!==void 0?arguments[3]:null;return{$$typeof:g,key:w==null?null:""+w,children:j,containerInfo:h,implementation:N}}var B=r.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;function D(j,h){if(j==="font")return"";if(typeof h=="string")return h==="use-credentials"?h:""}return Ie.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE=f,Ie.createPortal=function(j,h){var N=2<arguments.length&&arguments[2]!==void 0?arguments[2]:null;if(!h||h.nodeType!==1&&h.nodeType!==9&&h.nodeType!==11)throw Error(O(299));return H(j,h,null,N)},Ie.flushSync=function(j){var h=B.T,N=f.p;try{if(B.T=null,f.p=2,j)return j()}finally{B.T=h,f.p=N,f.d.f()}},Ie.preconnect=function(j,h){typeof j=="string"&&(h?(h=h.crossOrigin,h=typeof h=="string"?h==="use-credentials"?h:"":void 0):h=null,f.d.C(j,h))},Ie.prefetchDNS=function(j){typeof j=="string"&&f.d.D(j)},Ie.preinit=function(j,h){if(typeof j=="string"&&h&&typeof h.as=="string"){var N=h.as,w=D(N,h.crossOrigin),U=typeof h.integrity=="string"?h.integrity:void 0,L=typeof h.fetchPriority=="string"?h.fetchPriority:void 0;N==="style"?f.d.S(j,typeof h.precedence=="string"?h.precedence:void 0,{crossOrigin:w,integrity:U,fetchPriority:L}):N==="script"&&f.d.X(j,{crossOrigin:w,integrity:U,fetchPriority:L,nonce:typeof h.nonce=="string"?h.nonce:void 0})}},Ie.preinitModule=function(j,h){if(typeof j=="string")if(typeof h=="object"&&h!==null){if(h.as==null||h.as==="script"){var N=D(h.as,h.crossOrigin);f.d.M(j,{crossOrigin:N,integrity:typeof h.integrity=="string"?h.integrity:void 0,nonce:typeof h.nonce=="string"?h.nonce:void 0})}}else h==null&&f.d.M(j)},Ie.preload=function(j,h){if(typeof j=="string"&&typeof h=="object"&&h!==null&&typeof h.as=="string"){var N=h.as,w=D(N,h.crossOrigin);f.d.L(j,N,{crossOrigin:w,integrity:typeof h.integrity=="string"?h.integrity:void 0,nonce:typeof h.nonce=="string"?h.nonce:void 0,type:typeof h.type=="string"?h.type:void 0,fetchPriority:typeof h.fetchPriority=="string"?h.fetchPriority:void 0,referrerPolicy:typeof h.referrerPolicy=="string"?h.referrerPolicy:void 0,imageSrcSet:typeof h.imageSrcSet=="string"?h.imageSrcSet:void 0,imageSizes:typeof h.imageSizes=="string"?h.imageSizes:void 0,media:typeof h.media=="string"?h.media:void 0})}},Ie.preloadModule=function(j,h){if(typeof j=="string")if(h){var N=D(h.as,h.crossOrigin);f.d.m(j,{as:typeof h.as=="string"&&h.as!=="script"?h.as:void 0,crossOrigin:N,integrity:typeof h.integrity=="string"?h.integrity:void 0})}else f.d.m(j)},Ie.requestFormReset=function(j){f.d.r(j)},Ie.unstable_batchedUpdates=function(j,h){return j(h)},Ie.useFormState=function(j,h,N){return B.H.useFormState(j,h,N)},Ie.useFormStatus=function(){return B.H.useHostTransitionStatus()},Ie.version="19.2.6",Ie}var Lr;function Eh(){if(Lr)return Es.exports;Lr=1;function r(){if(!(typeof __REACT_DEVTOOLS_GLOBAL_HOOK__>"u"||typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE!="function"))try{__REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE(r)}catch(O){console.error(O)}}return r(),Es.exports=Th(),Es.exports}var Yr;function Ah(){if(Yr)return Ln;Yr=1;var r=Mh(),O=Hs(),_=Eh();function f(e){var t="https://react.dev/errors/"+e;if(1<arguments.length){t+="?args[]="+encodeURIComponent(arguments[1]);for(var l=2;l<arguments.length;l++)t+="&args[]="+encodeURIComponent(arguments[l])}return"Minified React error #"+e+"; visit "+t+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}function g(e){return!(!e||e.nodeType!==1&&e.nodeType!==9&&e.nodeType!==11)}function H(e){var t=e,l=e;if(e.alternate)for(;t.return;)t=t.return;else{e=t;do t=e,(t.flags&4098)!==0&&(l=t.return),e=t.return;while(e)}return t.tag===3?l:null}function B(e){if(e.tag===13){var t=e.memoizedState;if(t===null&&(e=e.alternate,e!==null&&(t=e.memoizedState)),t!==null)return t.dehydrated}return null}function D(e){if(e.tag===31){var t=e.memoizedState;if(t===null&&(e=e.alternate,e!==null&&(t=e.memoizedState)),t!==null)return t.dehydrated}return null}function j(e){if(H(e)!==e)throw Error(f(188))}function h(e){var t=e.alternate;if(!t){if(t=H(e),t===null)throw Error(f(188));return t!==e?null:e}for(var l=e,a=t;;){var n=l.return;if(n===null)break;var i=n.alternate;if(i===null){if(a=n.return,a!==null){l=a;continue}break}if(n.child===i.child){for(i=n.child;i;){if(i===l)return j(n),e;if(i===a)return j(n),t;i=i.sibling}throw Error(f(188))}if(l.return!==a.return)l=n,a=i;else{for(var c=!1,s=n.child;s;){if(s===l){c=!0,l=n,a=i;break}if(s===a){c=!0,a=n,l=i;break}s=s.sibling}if(!c){for(s=i.child;s;){if(s===l){c=!0,l=i,a=n;break}if(s===a){c=!0,a=i,l=n;break}s=s.sibling}if(!c)throw Error(f(189))}}if(l.alternate!==a)throw Error(f(190))}if(l.tag!==3)throw Error(f(188));return l.stateNode.current===l?e:t}function N(e){var t=e.tag;if(t===5||t===26||t===27||t===6)return e;for(e=e.child;e!==null;){if(t=N(e),t!==null)return t;e=e.sibling}return null}var w=Object.assign,U=Symbol.for("react.element"),L=Symbol.for("react.transitional.element"),Q=Symbol.for("react.portal"),W=Symbol.for("react.fragment"),Ce=Symbol.for("react.strict_mode"),xe=Symbol.for("react.profiler"),ve=Symbol.for("react.consumer"),J=Symbol.for("react.context"),X=Symbol.for("react.forward_ref"),q=Symbol.for("react.suspense"),K=Symbol.for("react.suspense_list"),V=Symbol.for("react.memo"),ue=Symbol.for("react.lazy"),P=Symbol.for("react.activity"),ae=Symbol.for("react.memo_cache_sentinel"),He=Symbol.iterator;function Oe(e){return e===null||typeof e!="object"?null:(e=He&&e[He]||e["@@iterator"],typeof e=="function"?e:null)}var Lt=Symbol.for("react.client.reference");function vt(e){if(e==null)return null;if(typeof e=="function")return e.$$typeof===Lt?null:e.displayName||e.name||null;if(typeof e=="string")return e;switch(e){case W:return"Fragment";case xe:return"Profiler";case Ce:return"StrictMode";case q:return"Suspense";case K:return"SuspenseList";case P:return"Activity"}if(typeof e=="object")switch(e.$$typeof){case Q:return"Portal";case J:return e.displayName||"Context";case ve:return(e._context.displayName||"Context")+".Consumer";case X:var t=e.render;return e=e.displayName,e||(e=t.displayName||t.name||"",e=e!==""?"ForwardRef("+e+")":"ForwardRef"),e;case V:return t=e.displayName||null,t!==null?t:vt(e.type)||"Memo";case ue:t=e._payload,e=e._init;try{return vt(e(t))}catch{}}return null}var Pe=Array.isArray,M=O.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,Y=_.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,F={pending:!1,data:null,method:null,action:null},ge=[],ye=-1;function o(e){return{current:e}}function b(e){0>ye||(e.current=ge[ye],ge[ye]=null,ye--)}function T(e,t){ye++,ge[ye]=e.current,e.current=t}var R=o(null),I=o(null),le=o(null),ee=o(null);function Ge(e,t){switch(T(le,t),T(I,e),T(R,null),t.nodeType){case 9:case 11:e=(e=t.documentElement)&&(e=e.namespaceURI)?lr(e):0;break;default:if(e=t.tagName,t=t.namespaceURI)t=lr(t),e=ar(t,e);else switch(e){case"svg":e=1;break;case"math":e=2;break;default:e=0}}b(R),T(R,e)}function ze(){b(R),b(I),b(le)}function jt(e){e.memoizedState!==null&&T(ee,e);var t=R.current,l=ar(t,e.type);t!==l&&(T(I,e),T(R,l))}function Ul(e){I.current===e&&(b(R),b(I)),ee.current===e&&(b(ee),Un._currentValue=F)}var Dt,na;function Yt(e){if(Dt===void 0)try{throw Error()}catch(l){var t=l.stack.trim().match(/\n( *(at )?)/);Dt=t&&t[1]||"",na=-1<l.stack.indexOf(`
     at`)?" (<anonymous>)":-1<l.stack.indexOf("@")?"@unknown:0:0":""}return`
 `+Dt+e+na}var Ot=!1;function Ut(e,t){if(!e||Ot)return"";Ot=!0;var l=Error.prepareStackTrace;Error.prepareStackTrace=void 0;try{var a={DetermineComponentFrameRoot:function(){try{if(t){var C=function(){throw Error()};if(Object.defineProperty(C.prototype,"props",{set:function(){throw Error()}}),typeof Reflect=="object"&&Reflect.construct){try{Reflect.construct(C,[])}catch(S){var v=S}Reflect.construct(e,[],C)}else{try{C.call()}catch(S){v=S}e.call(C.prototype)}}else{try{throw Error()}catch(S){v=S}(C=e())&&typeof C.catch=="function"&&C.catch(function(){})}}catch(S){if(S&&v&&typeof S.stack=="string")return[S.stack,v.stack]}return[null,null]}};a.DetermineComponentFrameRoot.displayName="DetermineComponentFrameRoot";var n=Object.getOwnPropertyDescriptor(a.DetermineComponentFrameRoot,"name");n&&n.configurable&&Object.defineProperty(a.DetermineComponentFrameRoot,"name",{value:"DetermineComponentFrameRoot"});var i=a.DetermineComponentFrameRoot(),c=i[0],s=i[1];if(c&&s){var d=c.split(`
