@@ -57,11 +57,11 @@ jobs:
             if(await page.locator('#bunny-kalima-listen').count()!==1) throw new Error('Direct Listen button missing');
             if(await page.locator('#bunny-kalima-repeat').count()!==1) throw new Error('Repeat button missing');
             if(await page.locator('#bunny-kalima-stop').count()!==1) throw new Error('Stop button missing');
+            if(!(await modal.innerText()).includes('Urdu Bunny Voice')) throw new Error('Urdu voice badge missing before playback');
             await page.locator('#bunny-kalima-listen').click();
             await page.waitForTimeout(150);
             const directText=await page.evaluate(()=>window.BunnyKalmaNaat.text());
             if(!directText.includes('پہلا کلمہ طیب') || !directText.includes('لا الٰہ الا اللہ') || !directText.includes('محمد رسول اللہ')) throw new Error('Urdu Kalma voice text incomplete');
-            if(!(await modal.innerText()).includes('Urdu Bunny Voice')) throw new Error('Urdu voice badge missing');
             if(await page.locator('.bunny-kalima-karaoke-line').count()!==4) throw new Error('Four live reading lines missing');
 
             // Simulate native TTS word-range callback and verify word + line karaoke.
