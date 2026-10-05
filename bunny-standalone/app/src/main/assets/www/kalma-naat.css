@@ -79,3 +79,43 @@
   color:#9a3412;font-size:10px;font-weight:800;text-align:center;line-height:1.45
 }
 .kalma-speaking{animation:bunnySplashBounce .75s ease-in-out infinite!important}
+
+.bunny-kalima-voice-badge{
+  display:inline-block;margin:4px auto 5px;padding:6px 10px;border-radius:999px;
+  background:linear-gradient(90deg,#dcfce7,#dbeafe);color:#047857;font-size:10px;font-weight:900;
+  border:1px solid #a7f3d0
+}
+.bunny-kalima-live-title{
+  text-align:center;margin:12px 0 8px;color:#5b21b6;font-size:12px;font-weight:900
+}
+#bunny-kalima-karaoke{display:grid;gap:8px}
+.bunny-kalima-karaoke-line{
+  border:2px solid #e2e8f0;border-radius:18px;padding:10px 11px;background:#fff;
+  transition:.22s ease;box-shadow:0 4px 10px rgba(15,23,42,.04)
+}
+.bunny-kalima-karaoke-line.active{
+  border-color:#34d399;background:linear-gradient(145deg,#ecfdf5,#f0fdfa);
+  box-shadow:0 8px 22px rgba(16,185,129,.18);transform:scale(1.015)
+}
+.bunny-kalima-karaoke-line.done{border-color:#bbf7d0;background:#f0fdf4}
+.bunny-kalima-urdu-live{
+  font-family:serif;font-size:24px;line-height:1.7;text-align:center;color:#475569;font-weight:700
+}
+.bunny-kalima-roman-live{
+  margin-top:3px;text-align:center;font-size:13px;line-height:1.6;color:#64748b;font-weight:900
+}
+.bunny-kalima-word,.bunny-kalima-roman-word{
+  display:inline-block;border-radius:9px;padding:1px 3px;transition:.16s ease
+}
+.bunny-kalima-word.active{
+  color:#064e3b;background:#fde68a;box-shadow:0 0 0 3px rgba(253,230,138,.38);
+  transform:scale(1.13);animation:bunnyKalmaWordPulse .6s ease-in-out infinite alternate
+}
+.bunny-kalima-roman-word.active{
+  color:#7c2d12;background:#fef3c7;transform:scale(1.08)
+}
+.bunny-kalima-word.done,.bunny-kalima-roman-word.done{color:#059669}
+@keyframes bunnyKalmaWordPulse{
+  from{box-shadow:0 0 0 2px rgba(253,230,138,.35)}
+  to{box-shadow:0 0 0 7px rgba(253,230,138,.1)}
+}
