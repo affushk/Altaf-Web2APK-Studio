@@ -23,5 +23,5 @@ jobs:
         run: gradle -p bunny-standalone :app:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Bunny-Teacher-v5.0-Phase3
+          name: Bunny-Teacher-v6.0-Phase4
           path: bunny-standalone/app/build/outputs/apk/debug/app-debug.apk
