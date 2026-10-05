@@ -57,3 +57,25 @@
 #bunny-kalima-youtube-open{width:100%;border:0;border-radius:0;padding:11px;background:#ef4444;color:white;font-weight:900}
 #bunny-kalima-close{width:100%;border:0;border-radius:18px;padding:12px;margin-top:12px;background:#334155;color:white;font-weight:900}
 .bunny-kalima-stars{text-align:center;font-size:18px;letter-spacing:5px;margin-top:8px}
+
+.bunny-kalima-status{
+  margin:10px 0 9px;padding:10px 12px;border-radius:16px;text-align:center;
+  background:#ecfeff;color:#0f766e;font-size:12px;font-weight:900
+}
+.bunny-kalima-listen{
+  width:100%;border:0;border-radius:22px;padding:15px 10px;font-size:20px;font-weight:900;
+  background:linear-gradient(135deg,#34d399,#22c55e);color:white;
+  box-shadow:0 10px 22px rgba(34,197,94,.22)
+}
+.bunny-kalima-simple-actions button{
+  background:linear-gradient(145deg,#e0f2fe,#ede9fe)!important;color:#5b21b6!important;
+  font-size:13px!important
+}
+#bunny-kalima-stop{
+  background:linear-gradient(145deg,#fee2e2,#ffe4e6)!important;color:#be123c!important
+}
+.bunny-kalima-help{
+  margin-top:10px;padding:10px 12px;border-radius:16px;background:#fff7ed;
+  color:#9a3412;font-size:10px;font-weight:800;text-align:center;line-height:1.45
+}
+.kalma-speaking{animation:bunnySplashBounce .75s ease-in-out infinite!important}
