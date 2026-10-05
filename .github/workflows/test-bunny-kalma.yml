@@ -60,7 +60,20 @@ jobs:
             await page.locator('#bunny-kalima-listen').click();
             await page.waitForTimeout(150);
             const directText=await page.evaluate(()=>window.BunnyKalmaNaat.text());
-            if(!directText.includes('ला इलाहा इल्लल्लाह') || !directText.includes('मुहम्मदुर रसूलुल्लाह')) throw new Error('Direct Kalma voice text incomplete');
+            if(!directText.includes('پہلا کلمہ طیب') || !directText.includes('لا الٰہ الا اللہ') || !directText.includes('محمد رسول اللہ')) throw new Error('Urdu Kalma voice text incomplete');
+            if(!(await modal.innerText()).includes('Urdu Bunny Voice')) throw new Error('Urdu voice badge missing');
+            if(await page.locator('.bunny-kalima-karaoke-line').count()!==4) throw new Error('Four live reading lines missing');
+
+            // Simulate native TTS word-range callback and verify word + line karaoke.
+            const targetStart=Number(await page.locator('[data-kline="1"] .bunny-kalima-word').first().getAttribute('data-start'));
+            await page.evaluate((s)=>{window.BunnyKalmaNaat.onVoiceMode('urdu');window.BunnyKalmaNaat.onStart();window.BunnyKalmaNaat.onRange(s,s+1)},targetStart);
+            if(await page.locator('[data-kline="1"].active').count()!==1) throw new Error('Current line highlight missing');
+            if(await page.locator('[data-kline="1"] .bunny-kalima-word.active').count()!==1) throw new Error('Urdu word live highlight missing');
+            if(await page.locator('[data-kline="1"] .bunny-kalima-roman-word.active').count()!==1) throw new Error('Roman word live highlight missing');
+
+            await page.evaluate(()=>window.BunnyKalmaNaat.onDone());
+            if(!(await page.locator('#bunny-kalima-status').innerText()).includes('माशाअल्लाह')) throw new Error('Completion state missing');
+
             if(await page.locator('iframe').count()!==0) throw new Error('YouTube iframe should be removed');
             if((await modal.innerText()).includes('YouTube')) throw new Error('YouTube UI should be removed');
 
