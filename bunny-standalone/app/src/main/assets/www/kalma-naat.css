@@ -1,0 +1,59 @@
+/* Pehla Kalma Tayyab — Kids Poem Card */
+#bunny-kalima-card{
+  width:100%;border:0;border-radius:28px;padding:18px;margin:0 0 18px;
+  background:linear-gradient(135deg,#0f766e,#14b8a6,#22c55e);
+  color:white;box-shadow:0 12px 28px rgba(15,118,110,.22);
+  text-align:left;position:relative;overflow:hidden
+}
+#bunny-kalima-card:before,#bunny-kalima-card:after{
+  content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.1)
+}
+#bunny-kalima-card:before{width:90px;height:90px;right:-24px;top:-28px}
+#bunny-kalima-card:after{width:70px;height:70px;left:-24px;bottom:-32px}
+#bunny-kalima-card .kalma-emoji{font-size:42px;display:block;margin-bottom:5px}
+#bunny-kalima-card .kalma-title{font-size:20px;font-weight:900;display:block}
+#bunny-kalima-card .kalma-sub{font-size:11px;font-weight:800;opacity:.9;display:block;margin-top:3px}
+
+#bunny-kalima-modal{
+  position:fixed;inset:0;z-index:100900;background:rgba(7,47,42,.48);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;padding:15px;font-family:"Nunito",system-ui,sans-serif
+}
+.bunny-kalima-sheet{
+  width:min(470px,100%);max-height:92vh;overflow:auto;border-radius:32px;padding:20px;
+  background:linear-gradient(180deg,#f0fdfa,#ffffff,#f0fdf4);
+  border:2px solid white;box-shadow:0 28px 80px rgba(15,118,110,.28)
+}
+.bunny-kalima-top{text-align:center}
+.bunny-kalima-moon{font-size:58px;animation:bunnySplashBounce 1.2s ease-in-out infinite}
+.bunny-kalima-h1{font-size:26px;font-weight:900;color:#047857;margin:3px 0}
+.bunny-kalima-small{font-size:11px;color:#64748b;font-weight:800}
+.bunny-kalima-learning{
+  margin:14px 0;padding:16px;border-radius:24px;background:linear-gradient(145deg,#ecfdf5,#f0fdfa);
+  border:2px solid #a7f3d0;text-align:center
+}
+.bunny-kalima-rhyme{font-size:17px;font-weight:900;color:#047857;margin-bottom:10px}
+.bunny-kalima-arabic{
+  direction:rtl;font-family:serif;font-size:31px;line-height:1.7;font-weight:700;color:#064e3b;
+  padding:9px 4px
+}
+.bunny-kalima-trans{font-size:17px;font-weight:900;color:#0f766e;line-height:1.5}
+.bunny-kalima-meaning{
+  margin-top:11px;border-radius:17px;padding:10px 12px;background:white;color:#475569;
+  font-size:12px;font-weight:800;line-height:1.5
+}
+.bunny-kalima-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.bunny-kalima-actions button,.bunny-kalima-full{
+  border:0;border-radius:18px;padding:12px 8px;font-weight:900;font-size:12px
+}
+#bunny-kalima-offline{background:linear-gradient(135deg,#d1fae5,#cffafe);color:#065f46}
+#bunny-kalima-video-toggle{background:linear-gradient(135deg,#fef3c7,#fed7aa);color:#9a3412}
+.bunny-kalima-video{
+  display:none;margin-top:13px;border-radius:22px;overflow:hidden;background:#111827;
+  box-shadow:0 10px 25px rgba(0,0,0,.18)
+}
+.bunny-kalima-video.open{display:block}
+.bunny-kalima-video iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#111827}
+.bunny-kalima-video-note{background:#f8fafc;padding:9px 10px;font-size:9px;color:#64748b;font-weight:800;text-align:center}
+#bunny-kalima-youtube-open{width:100%;border:0;border-radius:0;padding:11px;background:#ef4444;color:white;font-weight:900}
+#bunny-kalima-close{width:100%;border:0;border-radius:18px;padding:12px;margin-top:12px;background:#334155;color:white;font-weight:900}
+.bunny-kalima-stars{text-align:center;font-size:18px;letter-spacing:5px;margin-top:8px}
