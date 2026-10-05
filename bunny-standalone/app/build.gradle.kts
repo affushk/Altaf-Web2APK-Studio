@@ -10,8 +10,8 @@ android {
         applicationId = "com.altaf.bunnyteacher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.2-standalone"
+        versionCode = 6
+        versionName = "2.3-profile"
     }
 }
 
