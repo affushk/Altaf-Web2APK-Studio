@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.webkit.JavascriptInterface;
 import android.util.Log;
 import android.view.View;
@@ -53,6 +54,43 @@ public class MainActivity extends Activity {
             if (status == TextToSpeech.SUCCESS && tts != null) {
                 int result = tts.setLanguage(new Locale("hi", "IN"));
                 Log.i("BunnyTeacher", "TTS_INIT languageResult=" + result);
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    private void emitKalmaJs(String js) {
+                        runOnUiThread(() -> {
+                            if (web != null) {
+                                try { web.evaluateJavascript(js, null); } catch (Exception ignored) {}
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onStart(String utteranceId) {
+                        if ("bunny-kalima-urdu".equals(utteranceId)) {
+                            emitKalmaJs("window.BunnyKalmaNaat&&window.BunnyKalmaNaat.onStart&&window.BunnyKalmaNaat.onStart();");
+                        }
+                    }
+
+                    @Override
+                    public void onDone(String utteranceId) {
+                        if ("bunny-kalima-urdu".equals(utteranceId)) {
+                            emitKalmaJs("window.BunnyKalmaNaat&&window.BunnyKalmaNaat.onDone&&window.BunnyKalmaNaat.onDone();");
+                        }
+                    }
+
+                    @Override
+                    public void onError(String utteranceId) {
+                        if ("bunny-kalima-urdu".equals(utteranceId)) {
+                            emitKalmaJs("window.BunnyKalmaNaat&&window.BunnyKalmaNaat.onDone&&window.BunnyKalmaNaat.onDone();");
+                        }
+                    }
+
+                    @Override
+                    public void onRangeStart(String utteranceId, int start, int end, int frame) {
+                        if ("bunny-kalima-urdu".equals(utteranceId)) {
+                            emitKalmaJs("window.BunnyKalmaNaat&&window.BunnyKalmaNaat.onRange&&window.BunnyKalmaNaat.onRange(" + start + "," + end + ");");
+                        }
+                    }
+                });
             } else {
                 Log.w("BunnyTeacher", "TTS_INIT_FAILED status=" + status);
             }
@@ -164,6 +202,7 @@ public class MainActivity extends Activity {
                 try {
                     String spoken = personalizeVoiceText(text);
                     Log.i("BunnyTeacher", "TTS_SPEAK text=" + spoken);
+                    tts.setLanguage(new Locale("hi", "IN"));
                     tts.setSpeechRate(Math.max(0.65f, Math.min(1.15f, rate)));
                     tts.setPitch(1.08f);
                     tts.speak(spoken,
@@ -181,12 +220,46 @@ public class MainActivity extends Activity {
                 try {
                     String spoken = personalizeVoiceText(text);
                     Log.i("BunnyTeacher", "TTS_CUTE text=" + spoken);
+                    tts.setLanguage(new Locale("hi", "IN"));
                     tts.setSpeechRate(0.72f);
                     tts.setPitch(1.16f);
                     tts.speak(spoken,
                             TextToSpeech.QUEUE_FLUSH, null, "bunny-kalima-cute");
                 } catch (Exception e) {
                     Log.e("BunnyTeacher", "TTS_CUTE_ERROR", e);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void speakUrduKalma(String urduText, String fallbackHindi) {
+            runOnUiThread(() -> {
+                if (tts == null) return;
+                try {
+                    Locale urdu = new Locale("ur", "PK");
+                    int result = tts.setLanguage(urdu);
+                    boolean urduReady = result != TextToSpeech.LANG_MISSING_DATA
+                            && result != TextToSpeech.LANG_NOT_SUPPORTED;
+                    String spoken;
+                    if (urduReady) {
+                        spoken = urduText == null ? "" : urduText;
+                    } else {
+                        tts.setLanguage(new Locale("hi", "IN"));
+                        spoken = fallbackHindi == null ? "" : fallbackHindi;
+                    }
+                    if (web != null) {
+                        String mode = urduReady ? "urdu" : "fallback";
+                        web.evaluateJavascript(
+                                "window.BunnyKalmaNaat&&window.BunnyKalmaNaat.onVoiceMode&&window.BunnyKalmaNaat.onVoiceMode('" + mode + "');",
+                                null);
+                    }
+                    Log.i("BunnyTeacher", "TTS_URDU_KALMA mode=" + (urduReady ? "ur-PK" : "hi-IN") + " text=" + spoken);
+                    tts.setSpeechRate(0.66f);
+                    tts.setPitch(1.07f);
+                    tts.speak(spoken,
+                            TextToSpeech.QUEUE_FLUSH, null, "bunny-kalima-urdu");
+                } catch (Exception e) {
+                    Log.e("BunnyTeacher", "TTS_URDU_KALMA_ERROR", e);
                 }
             });
         }
