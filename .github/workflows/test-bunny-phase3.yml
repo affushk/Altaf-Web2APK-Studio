@@ -1,0 +1,73 @@
+name: Test Bunny Phase 3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-bunny-phase3.yml'
+      - 'bunny-standalone/app/src/main/assets/www/phase3.*'
+      - 'bunny-standalone/app/src/main/assets/www/index.html'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Verify Phase 3
+        run: |
+          (cd bunny-standalone/app/src/main/assets/www && python3 -m http.server 8000 >/tmp/p3-http.log 2>&1) &
+          cat > p3-test.js <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:430,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            await page.goto('http://127.0.0.1:8000/index.html');
+            await page.waitForTimeout(700);
+
+            await page.locator('#bunny-child-name').fill('Aafiya');
+            await page.locator('#bunny-child-age').fill('5');
+            await page.locator('#bunny-child-gender').selectOption('girl');
+            await page.locator('#bunny-profile-save').click();
+            await page.waitForTimeout(1800);
+
+            const body=await page.locator('body').innerText();
+            if(body.startsWith('\\n') || body.includes('\\n \\n')) throw new Error('literal slash-n still visible');
+            if(await page.locator('#bunny-p3-home').count()!==1) throw new Error('Phase 3 home card missing');
+
+            await page.locator('#bunny-p3-story').click();
+            if(!(await page.locator('#bunny-p3-modal').innerText()).includes('Story Time')) throw new Error('Story Time missing');
+            await page.locator('[data-story="share"]').click();
+            if(!(await page.locator('#bunny-story-text').innerText()).includes('Aafiya')) throw new Error('Story personalization missing');
+            await page.locator('#bunny-story-exit').click();
+            await page.locator('#bunny-p3-close').click();
+
+            await page.locator('#bunny-p3-badges').click();
+            if(!(await page.locator('#bunny-p3-modal').innerText()).includes('Badge Book')) throw new Error('Badge Book missing');
+            await page.locator('#bunny-badge-close').click();
+
+            // Parent button should be protected by gate.
+            await page.locator('#bunny-parent-launch').click();
+            if(await page.locator('#bunny-p3-gate').count()!==1) throw new Error('Parent gate missing');
+
+            if(errors.length) throw new Error(errors.join(' | '));
+            await page.screenshot({path:'bunny-phase3-test.png',fullPage:true});
+            console.log('PHASE3_TEST_PASS');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node p3-test.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bunny-Phase3-Test
+          path: bunny-phase3-test.png
