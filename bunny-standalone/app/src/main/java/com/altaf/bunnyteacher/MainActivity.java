@@ -1,6 +1,8 @@
 package com.altaf.bunnyteacher;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -8,6 +10,7 @@ import android.webkit.JavascriptInterface;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -73,6 +76,9 @@ public class MainActivity extends Activity {
         s.setAllowContentAccess(true);
         s.setAllowFileAccessFromFileURLs(true);
         s.setAllowUniversalAccessFromFileURLs(false);
+
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
 
         web.setBackgroundColor(Color.WHITE);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -164,6 +170,36 @@ public class MainActivity extends Activity {
                             TextToSpeech.QUEUE_FLUSH, null, "bunny-teacher");
                 } catch (Exception e) {
                     Log.e("BunnyTeacher", "TTS_SPEAK_ERROR", e);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void speakCute(String text) {
+            runOnUiThread(() -> {
+                if (tts == null) return;
+                try {
+                    String spoken = personalizeVoiceText(text);
+                    Log.i("BunnyTeacher", "TTS_CUTE text=" + spoken);
+                    tts.setSpeechRate(0.78f);
+                    tts.setPitch(1.22f);
+                    tts.speak(spoken,
+                            TextToSpeech.QUEUE_FLUSH, null, "bunny-kalima-cute");
+                } catch (Exception e) {
+                    Log.e("BunnyTeacher", "TTS_CUTE_ERROR", e);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openUrl(String url) {
+            if (url == null || url.trim().isEmpty()) return;
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e("BunnyTeacher", "OPEN_URL_ERROR", e);
                 }
             });
         }
