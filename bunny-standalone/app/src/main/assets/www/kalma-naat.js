@@ -1,10 +1,6 @@
-/* Pehla Kalma Tayyab — added to Poems without copying YouTube audio */
+/* Pehla Kalma Tayyab — simple direct in-app voice for kids */
 (function(){
   "use strict";
-
-  var YT_ID="jSoEVLNeHw0";
-  var YT_WATCH="https://www.youtube.com/watch?v="+YT_ID;
-  var YT_EMBED="https://www.youtube.com/embed/"+YT_ID+"?playsinline=1&rel=0&modestbranding=1";
 
   function childName(){
     try{
@@ -48,29 +44,40 @@
     card.innerHTML=
       '<span class="kalma-emoji">🌙🕌</span>'+
       '<span class="kalma-title">Pehla Kalma Tayyab</span>'+
-      '<span class="kalma-sub">Islamic Kids Naat • Cute voice • YouTube + Offline</span>';
+      '<span class="kalma-sub">Direct Offline Bunny Voice • Kids Friendly</span>';
     card.onclick=showModal;
     filterRow.parentElement.insertBefore(card,filterRow.nextSibling);
   }
 
-  function offlineText(){
-    var name=childName();
-    return name+", mere saath padhो. Pehla Kalma Tayyab. Tayyab maane paak. La ilaha illallah. Muhammadur Rasulullah.";
+  function voiceText(){
+    return childName()+" मेरे साथ पढ़ो। पहला कलमा तय्यब। तय्यब माने पाक। ला इलाहा इल्लल्लाह। मुहम्मदुर रसूलुल्लाह।";
+  }
+
+  function setSpeakingUI(on){
+    var status=document.getElementById("bunny-kalima-status");
+    var moon=document.querySelector("#bunny-kalima-modal .bunny-kalima-moon");
+    if(status)status.textContent=on?"🐰 Bunny पढ़ रही है... मेरे साथ दोहराओ":"✨ Ready — नीचे सुनो दबाओ";
+    if(moon)moon.classList.toggle("kalma-speaking",!!on);
   }
 
   function speakCute(){
-    var text=offlineText();
+    stopVoice();
+    setSpeakingUI(true);
+    var text=voiceText();
     try{
       if(window.AndroidTTS&&typeof window.AndroidTTS.speakCute==="function"){
         window.AndroidTTS.speakCute(text);
+        setTimeout(function(){setSpeakingUI(false)},8500);
         return;
       }
     }catch(e){}
     try{
       var u=new SpeechSynthesisUtterance(text);
-      u.lang="hi-IN";u.rate=.78;u.pitch=1.22;
+      u.lang="hi-IN";u.rate=.72;u.pitch=1.18;
+      u.onend=function(){setSpeakingUI(false)};
+      u.onerror=function(){setSpeakingUI(false)};
       window.speechSynthesis.cancel();window.speechSynthesis.speak(u);
-    }catch(e){}
+    }catch(e){setSpeakingUI(false)}
   }
 
   function stopVoice(){
@@ -78,15 +85,7 @@
       if(window.AndroidTTS&&typeof window.AndroidTTS.stop==="function")window.AndroidTTS.stop();
       else if(window.speechSynthesis)window.speechSynthesis.cancel();
     }catch(e){}
-  }
-
-  function openYoutube(){
-    try{
-      if(window.AndroidTTS&&typeof window.AndroidTTS.openUrl==="function"){
-        window.AndroidTTS.openUrl(YT_WATCH);return;
-      }
-    }catch(e){}
-    try{window.open(YT_WATCH,"_blank")}catch(e){}
+    setSpeakingUI(false);
   }
 
   function showModal(){
@@ -97,9 +96,9 @@
     modal.innerHTML=
       '<div class="bunny-kalima-sheet">'+
         '<div class="bunny-kalima-top">'+
-          '<div class="bunny-kalima-moon">🌙🕌</div>'+
+          '<div class="bunny-kalima-moon">🌙🐰🕌</div>'+
           '<div class="bunny-kalima-h1">Pehla Kalma Tayyab</div>'+
-          '<div class="bunny-kalima-small">Kids Learning • Repeat with Bunny</div>'+
+          '<div class="bunny-kalima-small">Bunny ke saath suno aur repeat karo</div>'+
         '</div>'+
         '<div class="bunny-kalima-learning">'+
           '<div class="bunny-kalima-rhyme">✨ Pehla Kalma Tayyab — Tayyab maane paak ✨</div>'+
@@ -107,43 +106,31 @@
           '<div class="bunny-kalima-trans">La ilaha illallah<br>Muhammadur Rasulullah</div>'+
           '<div class="bunny-kalima-meaning">सरल मतलब: अल्लाह के सिवा कोई इबादत के लायक़ नहीं, और हज़रत मुहम्मद ﷺ अल्लाह के रसूल हैं।</div>'+
         '</div>'+
-        '<div class="bunny-kalima-actions">'+
-          '<button id="bunny-kalima-offline">🐰 Offline Cute Voice</button>'+
-          '<button id="bunny-kalima-video-toggle">▶️ YouTube Kids Voice</button>'+
+        '<div id="bunny-kalima-status" class="bunny-kalima-status">✨ Ready — नीचे सुनो दबाओ</div>'+
+        '<button class="bunny-kalima-listen" id="bunny-kalima-listen">▶ सुनो</button>'+
+        '<div class="bunny-kalima-actions bunny-kalima-simple-actions">'+
+          '<button id="bunny-kalima-repeat">🔁 फिर से सुनो</button>'+
+          '<button id="bunny-kalima-stop">⏹ रोकें</button>'+
         '</div>'+
-        '<div class="bunny-kalima-video" id="bunny-kalima-video">'+
-          '<iframe id="bunny-kalima-frame" title="Pehla Kalma Tayyab Kids Video" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>'+
-          '<div class="bunny-kalima-video-note">Official YouTube player • Internet required • Audio is not copied into the APK</div>'+
-          '<button id="bunny-kalima-youtube-open">Open in YouTube ▶</button>'+
-        '</div>'+
+        '<div class="bunny-kalima-help">बच्चे को बस <b>सुनो</b> दबाना है — कोई YouTube या internet नहीं चाहिए।</div>'+
         '<div class="bunny-kalima-stars">⭐ 🌙 ⭐ 🌙 ⭐</div>'+
         '<button id="bunny-kalima-close">वापस कविताओं में</button>'+
       '</div>';
     document.body.appendChild(modal);
 
-    document.getElementById("bunny-kalima-offline").onclick=speakCute;
-    document.getElementById("bunny-kalima-video-toggle").onclick=function(){
-      stopVoice();
-      var box=document.getElementById("bunny-kalima-video");
-      var frame=document.getElementById("bunny-kalima-frame");
-      var opening=!box.classList.contains("open");
-      box.classList.toggle("open",opening);
-      if(opening&&!frame.getAttribute("src"))frame.setAttribute("src",YT_EMBED);
-      if(!opening)frame.setAttribute("src","");
-    };
-    document.getElementById("bunny-kalima-youtube-open").onclick=openYoutube;
+    document.getElementById("bunny-kalima-listen").onclick=speakCute;
+    document.getElementById("bunny-kalima-repeat").onclick=speakCute;
+    document.getElementById("bunny-kalima-stop").onclick=stopVoice;
     document.getElementById("bunny-kalima-close").onclick=function(){
-      stopVoice();
-      var frame=document.getElementById("bunny-kalima-frame");if(frame)frame.setAttribute("src","");
-      modal.remove();
+      stopVoice();modal.remove();
     };
     modal.addEventListener("click",function(e){
-      if(e.target===modal){
-        stopVoice();
-        var frame=document.getElementById("bunny-kalima-frame");if(frame)frame.setAttribute("src","");
-        modal.remove();
-      }
+      if(e.target===modal){stopVoice();modal.remove()}
     });
+
+    setTimeout(function(){
+      if(document.getElementById("bunny-kalima-modal"))speakCute();
+    },650);
   }
 
   var timer=null;
@@ -158,5 +145,5 @@
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});
   else start();
 
-  window.BunnyKalmaNaat={open:showModal,speak:speakCute,youtube:openYoutube};
+  window.BunnyKalmaNaat={open:showModal,speak:speakCute,stop:stopVoice,text:voiceText};
 })();
