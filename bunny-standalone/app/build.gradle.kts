@@ -10,8 +10,8 @@ android {
         applicationId = "com.altaf.bunnyteacher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 11
-        versionName = "6.0-phase4-adventure"
+        versionCode = 12
+        versionName = "6.1-kalma-naat"
     }
 }
 
