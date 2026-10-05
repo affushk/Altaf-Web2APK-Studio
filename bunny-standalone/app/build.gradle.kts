@@ -10,8 +10,8 @@ android {
         applicationId = "com.altaf.bunnyteacher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 13
-        versionName = "6.2-kalma-direct-voice"
+        versionCode = 14
+        versionName = "6.3-urdu-kalima-karaoke"
     }
 }
 
