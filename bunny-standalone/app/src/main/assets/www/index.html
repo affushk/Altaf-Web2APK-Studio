@@ -127,6 +127,15 @@
           return String(value || "").trim().replace(/\s+/g, " ").slice(0, 28);
         }
 
+        function syncNativeProfile() {
+          try {
+            var p = loadProfile();
+            if (p && p.name && window.AndroidTTS && typeof window.AndroidTTS.setProfile === "function") {
+              window.AndroidTTS.setProfile(String(p.name), String(p.gender || "other"));
+            }
+          } catch (e) {}
+        }
+
         function applyText(value) {
           var p = loadProfile();
           var s = String(value == null ? "" : value);
@@ -246,6 +255,11 @@
               gender: gender,
               updatedAt: Date.now()
             }));
+            try {
+              if (window.AndroidTTS && typeof window.AndroidTTS.setProfile === "function") {
+                window.AndroidTTS.setProfile(name, gender);
+              }
+            } catch (e) {}
             location.reload();
           };
 
@@ -278,6 +292,7 @@
 
         function start() {
           if (!document.body) return;
+          syncNativeProfile();
           if (!loadProfile()) showEditor(true);
           else addProfileButton();
 
