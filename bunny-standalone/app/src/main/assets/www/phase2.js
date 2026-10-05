@@ -280,6 +280,10 @@
     for(var i=0;i<moduleMap.length;i++)for(var j=0;j<moduleMap[i].keys.length;j++)if(text.indexOf(moduleMap[i].keys[j].toLowerCase())>=0)return moduleMap[i].id;
     return null;
   }
+  function moduleLabel(id){
+    var labels={alphabet:"ABC",arabic:"Arabic",numbers:"Ginti",colors:"Colors",shapes:"Shapes",animals:"Animals",matching:"Memory Game",manners:"Good Manners",duas:"Duas",fruits:"Fruits",drawing:"Drawing",poems:"Poems",quiz:"Quiz"};
+    return labels[id]||id;
+  }
   function buttonForModule(id){
     var spec=moduleMap.filter(function(x){return x.id===id})[0];if(!spec)return null;
     var buttons=[].slice.call(document.querySelectorAll("button"));
@@ -507,7 +511,7 @@
     var b=e.target&&e.target.closest?e.target.closest("button"):null;if(!b)return;
     if(b.closest&&b.closest("#bunny-p2-modal,#bunny-family-chooser,#bunny-family-editor,#bunny-p2-parent-dashboard"))return;
     var text=(b.innerText||b.textContent||"").trim(),mod=detectModule(text);
-    if(mod&&isHome())saveContinue(mod,text.split("\n")[0].slice(0,18));
+    if(mod&&isHome())saveContinue(mod,moduleLabel(mod));
     if(/^[A-Z]$/.test(text)||/^(?:[0-9]|10)$/.test(text)){
       var s=getStats();s.learnedTaps=(s.learnedTaps||0)+1;s.smartPoints=(s.smartPoints||0)+1;saveStats(s);bumpMission("learn",1);
     }
