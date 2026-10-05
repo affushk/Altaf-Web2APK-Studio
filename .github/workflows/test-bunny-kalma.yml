@@ -51,8 +51,8 @@ jobs:
             if(await modal.count()!==1) throw new Error('Kalma modal missing');
             const text=await modal.innerText();
             if(!text.includes('Pehla Kalma Tayyab')) throw new Error('Kalma title missing');
-            if(!text.includes('Tayyab maane paak')) throw new Error('User requested rhyme line missing');
-            if(!text.includes('La ilaha illallah')) throw new Error('Kalma transliteration missing');
+            if(!text.includes('طیب معنی پاک')) throw new Error('Urdu meaning line missing');
+            if(!text.includes('لا اِلٰہَ اِلَّا اللہ')) throw new Error('Urdu reading line missing');
 
             if(await page.locator('#bunny-kalima-listen').count()!==1) throw new Error('Direct Listen button missing');
             if(await page.locator('#bunny-kalima-repeat').count()!==1) throw new Error('Repeat button missing');
@@ -69,7 +69,7 @@ jobs:
             await page.evaluate((s)=>{window.BunnyKalmaNaat.onVoiceMode('urdu');window.BunnyKalmaNaat.onStart();window.BunnyKalmaNaat.onRange(s,s+1)},targetStart);
             if(await page.locator('[data-kline="1"].active').count()!==1) throw new Error('Current line highlight missing');
             if(await page.locator('[data-kline="1"] .bunny-kalima-word.active').count()!==1) throw new Error('Urdu word live highlight missing');
-            if(await page.locator('[data-kline="1"] .bunny-kalima-roman-word.active').count()!==1) throw new Error('Roman word live highlight missing');
+            if(await page.locator('[data-kline="1"] .bunny-kalima-roman-word.active').count()!==1) throw new Error('Second Urdu reading word live highlight missing');
 
             await page.evaluate(()=>window.BunnyKalmaNaat.onDone());
             if(!(await page.locator('#bunny-kalima-status').innerText()).includes('माशाअल्लाह')) throw new Error('Completion state missing');
