@@ -1,0 +1,138 @@
+name: Test Bunny Phase 2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-bunny-phase2.yml'
+      - 'bunny-standalone/app/src/main/assets/www/phase2.*'
+      - 'bunny-standalone/app/src/main/assets/www/index.html'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Test Phase 2 family learning
+        run: |
+          (cd bunny-standalone/app/src/main/assets/www && python3 -m http.server 8000 >/tmp/p2-http.log 2>&1) &
+          cat > phase2-test.js <<'JS'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:430,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+
+            await page.goto('http://127.0.0.1:8000/index.html');
+            await page.waitForTimeout(700);
+
+            // First learner: Aafiya
+            await page.locator('#bunny-child-name').fill('Aafiya');
+            await page.locator('#bunny-child-age').fill('5');
+            await page.locator('#bunny-child-gender').selectOption('girl');
+            await page.locator('#bunny-profile-save').click();
+            await page.waitForTimeout(1800);
+
+            if(!(await page.locator('#bunny-p2-home').innerText()).includes('Little Learner'))
+              throw new Error('Age Smart mode for age 5 missing');
+
+            // Open ABC, learn 3 letters, return home: tests mission + continue.
+            await page.getByRole('button',{name:/ABC/i}).first().click();
+            await page.waitForTimeout(500);
+            for(const letter of ['A','B','C']){
+              await page.getByRole('button',{name:letter,exact:true}).click();
+              await page.waitForTimeout(120);
+            }
+            await page.getByRole('button',{name:/वापस/}).click();
+            await page.waitForTimeout(550);
+
+            const continueText=await page.locator('#bunny-p2-continue').innerText();
+            if(!continueText.includes('ABC')) throw new Error('Continue Learning did not remember ABC');
+
+            // Play one complete smart Letter Hunt game.
+            await page.locator('#bunny-p2-games-launch').click();
+            await page.locator('[data-game="letter"]').click();
+            for(let round=0;round<5;round++){
+              const prompt=await page.locator('.bunny-game-prompt').innerText();
+              const target=prompt.trim().slice(-1);
+              await page.getByRole('button',{name:target,exact:true}).click();
+              await page.waitForTimeout(760);
+            }
+            if(!(await page.locator('#bunny-p2-modal').innerText()).includes('Amazing'))
+              throw new Error('Smart game completion screen missing');
+
+            const p2state=await page.evaluate(()=>({
+              stats:JSON.parse(localStorage.getItem('bunny-p2-stats-v1')||'{}'),
+              mission:JSON.parse(localStorage.getItem('bunny-p2-mission-v1')||'{}'),
+              family:JSON.parse(localStorage.getItem('bunny-family-profiles-v2')||'{}')
+            }));
+            if((p2state.stats.smartGames||0)<1) throw new Error('Smart game progress missing');
+            if((p2state.mission.learn||0)<3) throw new Error('Daily learn mission not tracked');
+            if((p2state.mission.game||0)<1) throw new Error('Daily game mission not tracked');
+            if((p2state.mission.module||0)<1) throw new Error('Daily explore mission not tracked');
+
+            // Add second learner: Arhan.
+            await page.evaluate(()=>window.BunnyPhase2.addChild());
+            await page.locator('#p2-child-name').fill('Arhan');
+            await page.locator('#p2-child-age').fill('7');
+            await page.locator('#p2-child-gender').selectOption('boy');
+            await page.locator('#p2-child-save').click();
+            await page.waitForTimeout(1700);
+
+            const arhan=await page.evaluate(()=>({
+              profile:JSON.parse(localStorage.getItem('bunny-child-profile-v1')||'{}'),
+              family:JSON.parse(localStorage.getItem('bunny-family-profiles-v2')||'{}'),
+              home:document.querySelector('#bunny-p2-home')?.innerText||''
+            }));
+            if(arhan.profile.name!=='Arhan') throw new Error('Second child not activated');
+            if(!arhan.home.includes('Curious Explorer')) throw new Error('Age Smart mode for age 7 missing');
+            if(!arhan.family.profiles || arhan.family.profiles.length!==2) throw new Error('Multi-child family profile missing');
+
+            // Switch back to Aafiya and verify her progress returns.
+            await page.evaluate(()=>window.BunnyPhase2.chooser());
+            await page.getByRole('button',{name:/Aafiya/}).click();
+            await page.waitForTimeout(1700);
+
+            const restored=await page.evaluate(()=>({
+              profile:JSON.parse(localStorage.getItem('bunny-child-profile-v1')||'{}'),
+              stats:JSON.parse(localStorage.getItem('bunny-p2-stats-v1')||'{}')
+            }));
+            if(restored.profile.name!=='Aafiya') throw new Error('Switch back to Aafiya failed');
+            if((restored.stats.smartGames||0)<1) throw new Error('Per-child progress was not restored');
+
+            // Parent dashboard should show both children.
+            await page.evaluate(()=>window.BunnyPhase2.dashboard());
+            const dash=await page.locator('#bunny-p2-parent-dashboard').innerText();
+            if(!dash.includes('Aafiya') || !dash.includes('Arhan')) throw new Error('Family dashboard missing children');
+
+            if(errors.length) throw new Error('Page errors: '+errors.join(' | '));
+
+            await page.screenshot({path:'bunny-phase2-test.png',fullPage:true});
+            fs.writeFileSync('bunny-phase2-state.json',JSON.stringify({p2state,arhan,restored},null,2));
+            console.log('PHASE2_TEST_PASS');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node phase2-test.js
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bunny-Phase2-Test
+          path: |
+            bunny-phase2-test.png
+            bunny-phase2-state.json
