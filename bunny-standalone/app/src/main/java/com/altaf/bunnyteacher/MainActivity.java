@@ -28,8 +28,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setStatusBarColor(Color.rgb(255, 138, 101));
-        getWindow().setNavigationBarColor(Color.rgb(255, 138, 101));
+        getWindow().setStatusBarColor(Color.rgb(255, 143, 177));
+        getWindow().setNavigationBarColor(Color.rgb(167, 139, 250));
 
         FrameLayout root = new FrameLayout(this);
         web = new WebView(this);
