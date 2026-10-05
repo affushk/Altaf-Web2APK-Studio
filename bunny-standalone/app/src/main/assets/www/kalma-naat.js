@@ -3,10 +3,10 @@
   "use strict";
 
   var VOICE_LINES=[
-    {urdu:"پہلا کلمہ طیب",roman:"Pehla Kalma Tayyab"},
-    {urdu:"طیب معنی پاک",roman:"Tayyab maane paak"},
-    {urdu:"لا الٰہ الا اللہ",roman:"La ilaha illallah"},
-    {urdu:"محمد رسول اللہ",roman:"Muhammadur Rasulullah"}
+    {urdu:"پہلا کلمہ طیب",roman:"پہلا کلمہ طیب"},
+    {urdu:"طیب معنی پاک",roman:"طیب معنی پاک"},
+    {urdu:"لا الٰہ الا اللہ",roman:"لا اِلٰہَ اِلَّا اللہ"},
+    {urdu:"محمد رسول اللہ",roman:"مُحَمَّدٌ رَسُولُ اللہ"}
   ];
   var URDU_TEXT=VOICE_LINES.map(function(x){return x.urdu}).join("۔ ")+"۔";
   var HINDI_FALLBACK="पहला कलमा तय्यब। तय्यब माने पाक। ला इलाहा इल्लल्लाह। मुहम्मदुर रसूलुल्लाह।";
@@ -245,7 +245,7 @@
           '<div class="bunny-kalima-arabic">لَا إِلٰهَ إِلَّا اللهُ مُحَمَّدٌ رَسُولُ اللهِ</div>'+
           '<div class="bunny-kalima-meaning">सरल मतलब: अल्लाह के सिवा कोई इबादत के लायक़ नहीं, और हज़रत मुहम्मद ﷺ अल्लाह के रसूल हैं।</div>'+
         '</div>'+
-        '<div class="bunny-kalima-live-title">✨ Live Reading — जो word बोले वही चमकेगा</div>'+
+        '<div class="bunny-kalima-live-title">✨ Live Urdu Reading — जो word बोले वही चमकेगा</div>'+
         '<div id="bunny-kalima-karaoke">'+buildKaraoke()+'</div>'+
         '<div id="bunny-kalima-status" class="bunny-kalima-status">✨ Ready — सुनो दबाओ</div>'+
         '<button class="bunny-kalima-listen" id="bunny-kalima-listen">▶ सुनो</button>'+
@@ -253,7 +253,7 @@
           '<button id="bunny-kalima-repeat">🔁 फिर से सुनो</button>'+
           '<button id="bunny-kalima-stop">⏹ रोकें</button>'+
         '</div>'+
-        '<div class="bunny-kalima-help">हर word voice के साथ highlight होगा ताकि बच्चे आसानी से follow कर सकें।</div>'+
+        '<div class="bunny-kalima-help">नीचे पूरी reading Urdu में है। Voice के साथ वही Urdu word highlight होगा ताकि बच्चे आसानी से follow कर सकें।</div>'+
         '<div class="bunny-kalima-stars">⭐ 🌙 ⭐ 🌙 ⭐</div>'+
         '<button id="bunny-kalima-close">वापस कविताओं में</button>'+
       '</div>';
