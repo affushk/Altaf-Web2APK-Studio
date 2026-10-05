@@ -181,8 +181,8 @@ public class MainActivity extends Activity {
                 try {
                     String spoken = personalizeVoiceText(text);
                     Log.i("BunnyTeacher", "TTS_CUTE text=" + spoken);
-                    tts.setSpeechRate(0.78f);
-                    tts.setPitch(1.22f);
+                    tts.setSpeechRate(0.72f);
+                    tts.setPitch(1.16f);
                     tts.speak(spoken,
                             TextToSpeech.QUEUE_FLUSH, null, "bunny-kalima-cute");
                 } catch (Exception e) {
