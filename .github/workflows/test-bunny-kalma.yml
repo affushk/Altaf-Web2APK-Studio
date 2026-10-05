@@ -54,10 +54,15 @@ jobs:
             if(!text.includes('Tayyab maane paak')) throw new Error('User requested rhyme line missing');
             if(!text.includes('La ilaha illallah')) throw new Error('Kalma transliteration missing');
 
-            await page.locator('#bunny-kalima-offline').click();
-            await page.locator('#bunny-kalima-video-toggle').click();
-            const src=await page.locator('#bunny-kalima-frame').getAttribute('src');
-            if(!src || !src.includes('youtube.com/embed/jSoEVLNeHw0')) throw new Error('Official YouTube embed missing');
+            if(await page.locator('#bunny-kalima-listen').count()!==1) throw new Error('Direct Listen button missing');
+            if(await page.locator('#bunny-kalima-repeat').count()!==1) throw new Error('Repeat button missing');
+            if(await page.locator('#bunny-kalima-stop').count()!==1) throw new Error('Stop button missing');
+            await page.locator('#bunny-kalima-listen').click();
+            await page.waitForTimeout(150);
+            const directText=await page.evaluate(()=>window.BunnyKalmaNaat.text());
+            if(!directText.includes('ला इलाहा इल्लल्लाह') || !directText.includes('मुहम्मदुर रसूलुल्लाह')) throw new Error('Direct Kalma voice text incomplete');
+            if(await page.locator('iframe').count()!==0) throw new Error('YouTube iframe should be removed');
+            if((await modal.innerText()).includes('YouTube')) throw new Error('YouTube UI should be removed');
 
             if(errors.length) throw new Error(errors.join(' | '));
             await page.screenshot({path:'bunny-kalma-test.png',fullPage:true});
