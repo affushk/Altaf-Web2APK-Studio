@@ -75,6 +75,15 @@ jobs:
             if(!(await page.locator('#bunny-p2-modal').innerText()).includes('Amazing'))
               throw new Error('Smart game completion screen missing');
 
+            // Verify every other smart game produces real choices.
+            await page.locator('#bunny-game-hub').click();
+            for(const type of ['count','color','missing','picture']){
+              await page.locator('[data-game="'+type+'"]').click();
+              const optionCount=await page.locator('.bunny-game-option').count();
+              if(optionCount<3) throw new Error(type+' game has too few options: '+optionCount);
+              await page.locator('#bunny-game-exit').click();
+            }
+
             const p2state=await page.evaluate(()=>({
               stats:JSON.parse(localStorage.getItem('bunny-p2-stats-v1')||'{}'),
               mission:JSON.parse(localStorage.getItem('bunny-p2-mission-v1')||'{}'),
