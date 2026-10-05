@@ -1,0 +1,63 @@
+name: Test Bunny Premium UI
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-bunny-premium.yml'
+      - 'bunny-standalone/app/src/main/assets/www/**'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Run premium UI smoke test
+        run: |
+          (cd bunny-standalone/app/src/main/assets/www && python3 -m http.server 8000 >/tmp/http.log 2>&1) &
+          cat > premium-test.js <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:430,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            await page.goto('http://127.0.0.1:8000/index.html');
+            await page.waitForTimeout(700);
+            await page.locator('#bunny-child-name').fill('TestKid');
+            await page.locator('#bunny-child-age').fill('5');
+            await page.locator('#bunny-child-gender').selectOption('girl');
+            await page.locator('#bunny-profile-save').click();
+            await page.waitForTimeout(1900);
+            const welcome=await page.locator('#bunny-premium-welcome').innerText();
+            if(!welcome.includes('TestKid')) throw new Error('welcome missing');
+            if(await page.locator('#bunny-parent-launch').count()!==1) throw new Error('parent button missing');
+            if(await page.locator('#bunny-magic-bg').count()!==1) throw new Error('background missing');
+            await page.locator('#bunny-daily-gift').click();
+            await page.waitForTimeout(500);
+            if(await page.locator('#bunny-sticker-modal').count()!==1) throw new Error('sticker reward missing');
+            await page.locator('#bunny-sticker-close').click();
+            await page.locator('#bunny-parent-launch').click();
+            if(await page.locator('#bunny-parent-modal').count()!==1) throw new Error('parent modal missing');
+            await page.locator('#bunny-parent-close').click();
+            await page.getByRole('button',{name:/ABC/i}).first().click();
+            await page.waitForTimeout(700);
+            if(!(await page.locator('body').innerText()).includes('ABC सीखो')) throw new Error('ABC failed');
+            if(errors.length) throw new Error(errors.join(' | '));
+            await page.screenshot({path:'bunny-premium-test.png',fullPage:true});
+            console.log('PREMIUM_TEST_PASS');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node premium-test.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bunny-Premium-Test
+          path: bunny-premium-test.png
