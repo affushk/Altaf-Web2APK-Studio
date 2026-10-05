@@ -112,7 +112,7 @@
           '<button id="bunny-kalima-repeat">🔁 फिर से सुनो</button>'+
           '<button id="bunny-kalima-stop">⏹ रोकें</button>'+
         '</div>'+
-        '<div class="bunny-kalima-help">बच्चे को बस <b>सुनो</b> दबाना है — कोई YouTube या internet नहीं चाहिए।</div>'+
+        '<div class="bunny-kalima-help">बच्चे को बस <b>सुनो</b> दबाना है — voice app के अंदर ही चलेगी।</div>'+
         '<div class="bunny-kalima-stars">⭐ 🌙 ⭐ 🌙 ⭐</div>'+
         '<button id="bunny-kalima-close">वापस कविताओं में</button>'+
       '</div>';
