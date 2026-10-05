@@ -261,8 +261,8 @@
           var b = document.createElement("button");
           b.id = "bunny-profile-launch";
           b.type = "button";
-          b.title = "Edit child profile";
-          b.setAttribute("aria-label", "Edit child profile");
+          b.title = p.name + " • Age " + p.age + " — Edit profile";
+          b.setAttribute("aria-label", "Edit " + p.name + " profile, age " + p.age);
           b.setAttribute("data-bunny-profile-ui", "1");
           b.textContent = p.gender === "girl" ? "👧" : p.gender === "boy" ? "👦" : "🧒";
           b.onclick = function () { showEditor(true); };
