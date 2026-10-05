@@ -342,8 +342,13 @@
   var gameSession=null;
   function rand(n){return Math.floor(Math.random()*n)}
   function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=rand(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+  function choiceKey(x){
+    if(x&&typeof x==="object")return String(x.n||x.w||x.value||JSON.stringify(x));
+    return String(x);
+  }
   function uniqueChoices(answer,pool,count){
-    var arr=[answer],copy=shuffle(pool.filter(function(x){return String(x)!==String(answer)}));
+    var key=choiceKey(answer);
+    var arr=[answer],copy=shuffle(pool.filter(function(x){return choiceKey(x)!==key}));
     while(arr.length<count&&copy.length)arr.push(copy.shift());
     return shuffle(arr);
   }
