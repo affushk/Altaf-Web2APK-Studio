@@ -40,7 +40,7 @@ jobs:
             if(await page.locator('#bunny-parent-launch').count()!==1) throw new Error('parent button missing');
             if(await page.locator('#bunny-magic-bg').count()!==1) throw new Error('background missing');
             await page.locator('#bunny-daily-gift').click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(900);
             if(await page.locator('#bunny-sticker-modal').count()!==1) throw new Error('sticker reward missing');
             await page.locator('#bunny-sticker-close').click();
             await page.locator('#bunny-parent-launch').click();
