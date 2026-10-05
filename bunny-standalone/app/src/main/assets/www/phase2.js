@@ -160,7 +160,12 @@
       if(current){
         var cp=findProfile(fam,current.id);if(!cp)return;
         cp.name=n;cp.age=a;cp.gender=g;cp.updatedAt=Date.now();saveFamily(fam);
-        if(cp.id===activeId())syncLegacy(cp);
+        if(cp.id===activeId()){
+          syncLegacy(cp);
+          sessionStorage.setItem(SESSION_KEY,"1");
+          location.reload();
+          return;
+        }
         wrap.remove();renderHome();augmentParent();
       }else{
         saveCurrentIntoActive();
