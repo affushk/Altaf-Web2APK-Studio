@@ -10,8 +10,8 @@ android {
         applicationId = "com.altaf.bunnyteacher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 14
-        versionName = "6.3-urdu-kalima-karaoke"
+        versionCode = 15
+        versionName = "6.4-urdu-only-kalima"
     }
 }
 
