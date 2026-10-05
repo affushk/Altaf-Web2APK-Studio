@@ -556,6 +556,8 @@
 
         function decorate(){
           refreshWelcome();addParentButton();
+          var profileBtn=document.getElementById("bunny-profile-launch");
+          if(profileBtn)profileBtn.style.display=welcomeNode()?"flex":"none";
         }
         function start(){
           if(!document.body)return;
