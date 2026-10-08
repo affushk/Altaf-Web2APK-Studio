@@ -1,0 +1,66 @@
+name: Build Altaf Create Studio APK
+
+on:
+  push:
+    branches:
+      - altaf-create-studio-v1
+    paths:
+      - 'altaf-create-studio/**'
+      - '.github/workflows/build-altaf-create-studio.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'altaf-create-studio/**'
+      - '.github/workflows/build-altaf-create-studio.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: altaf-create-studio
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Altaf-Create-Studio-V1.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Altaf-Create-Studio-V1-APK
+          path: altaf-create-studio/Altaf-Create-Studio-V1.apk
+          if-no-files-found: error
